@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:guided": "bun run scripts/dev-guided.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "onboard": "bun run scripts/onboard.ts",
+    "smoke": "playwright test",
+    "smoke:headed": "playwright test --headed"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -26,6 +30,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^18.3.28",
