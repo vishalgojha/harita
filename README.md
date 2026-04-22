@@ -11,10 +11,23 @@ The current UI is intentionally dense and operational rather than marketing-led:
 
 ## Fast onboarding
 
-For non-technical users on Windows, use the guided bootstrap instead of following setup steps manually:
+For Windows setup, use the guided bootstrap instead of following setup steps manually.
+
+Important:
+
+- The command below must be run from the `harita` repo root, not from `C:\Users\<name>` or another parent folder.
+- If this project is going to be distributed to consultants, package it with a root launcher such as `Start-Harita.ps1` or `Start-Harita.bat` so they do not need to know the internal script path.
+
+From the repo root:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\onboard.ps1
+```
+
+Or with an absolute path:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\path\to\harita\scripts\onboard.ps1
 ```
 
 This flow will:
