@@ -39,8 +39,11 @@ export function LoginForm({ demoMode = false }: { demoMode?: boolean }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-slate-700">Email</label>
+        <label htmlFor="email" className="text-[11px] font-medium text-[var(--color-text-secondary)]">
+          Email
+        </label>
         <Input
+          id="email"
           type="email"
           required
           value={email}
@@ -49,17 +52,20 @@ export function LoginForm({ demoMode = false }: { demoMode?: boolean }) {
         />
       </div>
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-slate-700">Password</label>
+        <label htmlFor="password" className="text-[11px] font-medium text-[var(--color-text-secondary)]">
+          Password
+        </label>
         <Input
+          id="password"
           type="password"
           required={!demoMode}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder={demoMode ? "Skipped in demo mode" : "••••••••"}
+          placeholder={demoMode ? "Skipped in demo mode" : "........"}
         />
       </div>
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-      <Button type="submit" className="w-full" disabled={loading}>
+      {error ? <p className="text-[11px] text-[var(--color-red)]">{error}</p> : null}
+      <Button type="submit" className="h-8 w-full rounded-md" disabled={loading}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         {demoMode ? "Open demo workspace" : "Sign in"}
       </Button>

@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, FileCheck2, MessageSquareMore, Plus } from "lucide-react";
 import { createProjectAction } from "@/app/actions";
 import { SetupState } from "@/components/setup-state";
 import { Shell } from "@/components/shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { env } from "@/lib/env";
@@ -28,110 +26,91 @@ export default async function DashboardPage() {
       title="Consultant Dashboard"
       description={
         env.isConfigured
-          ? `Signed in as ${user?.email ?? "unknown user"}. All project trackers, review actions and exports are live.`
-          : "Demo mode is active. The UI is using the seeded CCIL-style catalog until Supabase is configured."
+          ? `Signed in as ${user?.email ?? "unknown user"}. All project trackers, review actions, and exports are live.`
+          : "Demo mode is active. The seeded catalog is visible until the live workspace connection is completed."
       }
       role="consultant"
       notificationCount={projects.reduce((sum, project) => sum + project.openRemarks, 0)}
     >
       {!env.isConfigured ? <SetupState /> : null}
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            { label: "Tracked credits", value: totals.totalCredits, icon: BriefcaseBusiness },
-            { label: "Docs uploaded", value: totals.uploadedDocs, icon: FileCheck2 },
-            { label: "Mandatory met", value: totals.mandatoryCreditsMet, icon: FileCheck2 },
-            { label: "Open remarks", value: totals.openRemarks, icon: MessageSquareMore },
-          ].map((item) => (
-            <Card key={item.label}>
-              <CardContent className="flex items-start justify-between gap-4 p-5">
-                <div>
-                  <p className="text-sm text-slate-500">{item.label}</p>
-                  <p className="mt-2 text-3xl font-extrabold tracking-tight">{item.value}</p>
-                </div>
-                <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-                  <item.icon className="h-5 w-5" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Tracked credits", value: totals.totalCredits, meta: `${projects.length} active projects` },
+          { label: "Docs uploaded", value: totals.uploadedDocs, meta: "Across all workspaces" },
+          { label: "Mandatory met", value: totals.mandatoryCreditsMet, meta: "Ready for submission checks" },
+          { label: "Open remarks", value: totals.openRemarks, meta: "Needs consultant review" },
+        ].map((item) => (
+          <div key={item.label} className="surface-card p-4">
+            <p className="text-[11px] uppercase tracking-[0.06em] text-[var(--color-text-tertiary)]">
+              {item.label}
+            </p>
+            <p className="mono mt-2 text-[28px] font-medium leading-none text-[var(--color-text-primary)]">
+              {item.value}
+            </p>
+            <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">{item.meta}</p>
+          </div>
+        ))}
+      </section>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold">Create a new project</h3>
-                <p className="text-sm text-slate-600">
-                  New projects automatically seed the full IGBC Green Interiors v2 credit library.
-                </p>
+      <section className="surface-card mt-4 p-4">
+        <form action={createProjectAction} className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_160px_auto]">
+          <Input name="name" placeholder="New project name" required />
+          <select
+            name="target_rating"
+            className="h-[34px] rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-[13px] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)]"
+            defaultValue="Gold"
+          >
+            {["Certified", "Silver", "Gold", "Platinum"].map((rating) => (
+              <option key={rating} value={rating}>
+                {rating}
+              </option>
+            ))}
+          </select>
+          <Button type="submit" className="h-[34px] rounded-md px-4">
+            Create project
+          </Button>
+        </form>
+      </section>
+
+      <section className="mt-4 grid gap-3">
+        {projects.map((project) => (
+          <article key={project.id} className="surface-card flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="truncate text-[15px] font-medium text-[var(--color-text-primary)]">
+                  {project.name}
+                </h2>
+                <Badge className="border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[11px] text-[var(--color-green)]">
+                  {project.target_rating}
+                </Badge>
+                <Badge className="border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[11px] text-[var(--color-text-secondary)]">
+                  {roleLabels[project.role]}
+                </Badge>
               </div>
-              <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-                <Plus className="h-5 w-5" />
+              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{project.certification_type}</p>
+              <p className="mt-3 text-[12px] text-[var(--color-text-secondary)]">
+                {project.totalCredits} credits · {project.uploadedDocs} docs · {project.mandatoryCreditsMet} mandatory
+                met · {project.openRemarks} remarks
+              </p>
+              <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-3">
+                <Progress value={project.overallCompletion} />
+                <span className="mono text-[12px] text-[var(--color-text-secondary)]">
+                  {pct(project.overallCompletion)}
+                </span>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <form action={createProjectAction} className="grid gap-3 sm:grid-cols-[1fr_180px_auto]">
-              <Input name="name" placeholder="Project name" required />
-              <select
-                name="target_rating"
-                className="rounded-xl border border-border bg-white px-3.5 py-2.5 text-sm outline-none focus:border-primary"
-                defaultValue="Gold"
-              >
-                {["Certified", "Silver", "Gold", "Platinum"].map((rating) => (
-                  <option key={rating} value={rating}>
-                    {rating}
-                  </option>
-                ))}
-              </select>
-              <Button type="submit">Create project</Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-6 grid gap-4">
-        {projects.map((project) => (
-          <Card key={project.id}>
-            <CardContent className="grid gap-4 p-5 lg:grid-cols-[1fr_240px] lg:items-center">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h3 className="text-xl font-bold">{project.name}</h3>
-                  <Badge className="bg-primary/10 text-primary">{project.target_rating}</Badge>
-                  <Badge className="bg-slate-100 text-slate-700">{roleLabels[project.role]}</Badge>
-                </div>
-                <p className="text-sm text-slate-600">{project.certification_type}</p>
-                <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-4">
-                  <div>Total credits: {project.totalCredits}</div>
-                  <div>Docs uploaded: {project.uploadedDocs}</div>
-                  <div>Mandatory met: {project.mandatoryCreditsMet}</div>
-                  <div>Open remarks: {project.openRemarks}</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Overall completion</span>
-                    <span className="font-semibold text-slate-800">{pct(project.overallCompletion)}</span>
-                  </div>
-                  <Progress value={project.overallCompletion} />
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 lg:items-end">
-                <Button asChild>
-                  <Link href={`/projects/${project.id}`} className="inline-flex items-center gap-2">
-                    Open workspace
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="secondary" asChild>
-                  <Link href={`/projects/${project.id}/submission`}>Submission pack</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="flex items-center gap-2 lg:justify-end">
+              <Button asChild className="rounded-md px-3 text-[12px]">
+                <Link href={`/projects/${project.id}`}>Open workspace</Link>
+              </Button>
+              <Button asChild variant="secondary" className="rounded-md px-3 text-[12px]">
+                <Link href={`/projects/${project.id}/submission`}>Submission pack</Link>
+              </Button>
+            </div>
+          </article>
         ))}
-      </div>
+      </section>
     </Shell>
   );
 }

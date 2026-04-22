@@ -4,6 +4,27 @@
 
 :root {
   color-scheme: light;
+  --color-bg: #fafaf9;
+  --color-surface: #ffffff;
+  --color-surface-2: #f5f5f3;
+  --color-border: #e5e5e2;
+  --color-border-strong: #d0d0cc;
+  --color-text-primary: #1a1a18;
+  --color-text-secondary: #6b6b66;
+  --color-text-tertiary: #9b9b94;
+  --color-green: #1d9e75;
+  --color-green-light: #e8f5f0;
+  --color-green-dim: #0f6e52;
+  --color-amber: #d97706;
+  --color-amber-light: #fef3c7;
+  --color-red: #dc2626;
+  --color-red-light: #fee2e2;
+  --color-blue: #2563eb;
+  --color-blue-light: #eff6ff;
+  --color-purple: #7c3aed;
+  --color-purple-light: #f5f3ff;
+  --color-olive: #65a30d;
+  --color-olive-light: #f7fee7;
 }
 
 * {
@@ -17,11 +38,10 @@ body {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(29, 158, 117, 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgba(57, 136, 255, 0.1), transparent 26%),
-    linear-gradient(180deg, #f8fcfa 0%, #eef5f1 100%);
-  color: #16352c;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: "Geist Sans", "Segoe UI", sans-serif;
+  font-feature-settings: "ss01" 1, "cv05" 1;
 }
 
 a {
@@ -36,7 +56,75 @@ textarea {
   font: inherit;
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.76);
-  backdrop-filter: blur(16px);
+button,
+input,
+select,
+textarea,
+a {
+  transition-property: background-color, border-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: ease;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-green-light);
+  color: var(--color-text-primary);
+}
+
+@layer base {
+  * {
+    box-shadow: none !important;
+  }
+}
+
+@layer components {
+  .app-shell {
+    min-height: 100vh;
+    background: var(--color-bg);
+  }
+
+  .surface-card {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    border-radius: 12px;
+  }
+
+  .surface-muted {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+    border-radius: 12px;
+  }
+
+  .dense-label {
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+  }
+
+  .mono {
+    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  .text-secondary {
+    color: var(--color-text-secondary);
+  }
+
+  .text-tertiary {
+    color: var(--color-text-tertiary);
+  }
+
+  .hairline {
+    border-color: var(--color-border);
+  }
 }

@@ -75,15 +75,20 @@ export function UploadDocumentForm({
   }
 
   return (
-    <form onSubmit={onUpload} className="space-y-3 rounded-2xl border border-dashed border-border p-4">
-      <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-        <UploadCloud className="h-4 w-4 text-primary" />
-        Upload owner evidence
+    <form onSubmit={onUpload} className="space-y-3 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="text-center">
+        <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-[var(--color-surface-2)] text-[var(--color-text-secondary)]">
+          <UploadCloud className="h-4 w-4" />
+        </div>
+        <p className="mt-2 text-[11px] font-medium text-[var(--color-text-primary)]">Upload owner evidence</p>
+        <p className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">
+          Add one required document and it will appear in the checklist below.
+        </p>
       </div>
       <select
         value={docType}
         onChange={(event) => setDocType(event.target.value)}
-        className="w-full rounded-xl border border-border bg-white px-3.5 py-2.5 text-sm outline-none focus:border-primary"
+        className="h-8 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-[12px] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)]"
       >
         {docTypes.map((type) => (
           <option key={type} value={type}>
@@ -96,10 +101,10 @@ export function UploadDocumentForm({
         name="file"
         type="file"
         accept={accept}
-        className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:font-medium"
+        className="block w-full text-[11px] text-[var(--color-text-secondary)] file:mr-3 file:rounded-md file:border file:border-[var(--color-border)] file:bg-[var(--color-surface-2)] file:px-3 file:py-1.5 file:text-[11px] file:font-medium file:text-[var(--color-text-primary)]"
       />
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-      <Button type="submit" className="w-full" disabled={loading || disabled}>
+      {error ? <p className="text-[11px] text-[var(--color-red)]">{error}</p> : null}
+      <Button type="submit" className="h-8 w-full rounded-md" disabled={loading || disabled}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Upload document
       </Button>

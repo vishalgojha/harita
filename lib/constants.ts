@@ -1,17 +1,17 @@
 export const categoryMeta = {
-  EDA: { label: "Eco Design Approach", color: "bg-category-eda/15 text-category-eda" },
-  WC: { label: "Water Conservation", color: "bg-category-wc/15 text-category-wc" },
-  EE: { label: "Energy Efficiency", color: "bg-category-ee/15 text-category-ee" },
-  IM: { label: "Interior Materials", color: "bg-category-im/15 text-category-im" },
-  IE: { label: "Indoor Environment", color: "bg-category-ie/15 text-category-ie" },
-  IID: { label: "Innovation", color: "bg-category-iid/15 text-category-iid" },
+  EDA: { label: "Eco Design Approach", color: "bg-[var(--color-blue-light)] text-[var(--color-blue)] border-[var(--color-blue-light)]", dot: "bg-[var(--color-blue)]" },
+  WC: { label: "Water Conservation", color: "bg-[var(--color-green-light)] text-[var(--color-green)] border-[var(--color-green-light)]", dot: "bg-[var(--color-green)]" },
+  EE: { label: "Energy Efficiency", color: "bg-[var(--color-amber-light)] text-[var(--color-amber)] border-[var(--color-amber-light)]", dot: "bg-[var(--color-amber)]" },
+  IM: { label: "Interior Materials", color: "bg-[var(--color-purple-light)] text-[var(--color-purple)] border-[var(--color-purple-light)]", dot: "bg-[var(--color-purple)]" },
+  IE: { label: "Indoor Environment", color: "bg-[var(--color-red-light)] text-[var(--color-red)] border-[var(--color-red-light)]", dot: "bg-[var(--color-red)]" },
+  IID: { label: "Innovation", color: "bg-[var(--color-olive-light)] text-[var(--color-olive)] border-[var(--color-olive-light)]", dot: "bg-[var(--color-olive)]" },
 } as const;
 
 export const creditStatuses = {
-  pending: "bg-slate-200 text-slate-700",
-  in_progress: "bg-sky-100 text-sky-700",
-  blocked: "bg-rose-100 text-rose-700",
-  complete: "bg-emerald-100 text-emerald-700",
+  pending: "border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-secondary)]",
+  in_progress: "border border-[var(--color-blue-light)] bg-[var(--color-blue-light)] text-[var(--color-blue)]",
+  blocked: "border border-[var(--color-red-light)] bg-[var(--color-red-light)] text-[var(--color-red)]",
+  complete: "border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[var(--color-green)]",
 } as const;
 
 export const roleLabels = {

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Bell, Leaf, LogOut, Settings2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Bell, Leaf } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { roleLabels } from "@/lib/constants";
 import type { MemberRole } from "@/lib/types";
@@ -19,47 +18,43 @@ export function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto min-h-screen max-w-[1560px] px-4 py-4 sm:px-6 lg:px-8">
-      <div className="glass rounded-[1.75rem] border border-white/80 shadow-panel">
-        <header className="flex flex-col gap-4 border-b border-border/80 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white">
-              <Leaf className="h-6 w-6" />
+    <div className="app-shell">
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="mx-auto flex min-h-[56px] max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-green)] text-white">
+              <Leaf className="h-3.5 w-3.5" />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Link href="/dashboard" className="text-lg font-extrabold tracking-tight">
-                  HaritaDocs
-                </Link>
-                {role ? (
-                  <Badge className="bg-primary/10 text-primary">{roleLabels[role]}</Badge>
-                ) : null}
-              </div>
-              <h1 className="mt-1 text-2xl font-extrabold tracking-tight">{title}</h1>
-              <p className="mt-1 text-sm text-slate-600">{description}</p>
-            </div>
+            <Link href="/dashboard" className="text-[15px] font-medium text-[var(--color-text-primary)]">
+              HaritaDocs
+            </Link>
+            {role ? (
+              <Badge className="border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[11px] text-[var(--color-green)]">
+                {roleLabels[role]}
+              </Badge>
+            ) : null}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-slate-100 text-slate-700">
-              <Bell className="mr-1 h-3.5 w-3.5" />
-              {notificationCount ?? 0} alerts
-            </Badge>
-            <Button variant="ghost" className="gap-2" asChild>
-              <Link href="/dashboard">
-                <Settings2 className="h-4 w-4" />
-                Workspace
-              </Link>
-            </Button>
+          <div className="flex items-center gap-3 text-[12px] text-[var(--color-text-secondary)]">
+            <Link href="/dashboard" className="inline-flex items-center gap-1.5 hover:text-[var(--color-text-primary)]">
+              <Bell className="h-3.5 w-3.5" />
+              <span className="mono text-[11px]">{notificationCount ?? 0}</span>
+            </Link>
+            <span className="h-4 w-px bg-[var(--color-border)]" aria-hidden="true" />
             <form action="/auth/signout" method="post">
-              <Button variant="secondary" className="gap-2">
-                <LogOut className="h-4 w-4" />
+              <button type="submit" className="text-[12px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
                 Sign out
-              </Button>
+              </button>
             </form>
           </div>
-        </header>
-        <main className="p-4 sm:p-5 lg:p-6">{children}</main>
-      </div>
+        </div>
+      </header>
+      <main className="mx-auto max-w-[1480px] px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mb-4 flex flex-col gap-1">
+          <h1 className="text-[15px] font-medium text-[var(--color-text-primary)]">{title}</h1>
+          <p className="text-[12px] text-[var(--color-text-secondary)]">{description}</p>
+        </div>
+        {children}
+      </main>
     </div>
   );
 }
