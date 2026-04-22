@@ -15,14 +15,22 @@ For Windows setup, use the guided bootstrap instead of following setup steps man
 
 Important:
 
-- The command below must be run from the `harita` repo root, not from `C:\Users\<name>` or another parent folder.
-- If this project is going to be distributed to consultants, package it with a root launcher such as `Start-Harita.ps1` or `Start-Harita.bat` so they do not need to know the internal script path.
+- If you cloned the repo, run the command from the `harita` folder, not from `C:\Users\<name>` or another parent folder.
+- If this project is being distributed to consultants as a folder or zip, they should use the root launcher files in that folder instead of the internal `scripts\` path.
 
 From the repo root:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\onboard.ps1
 ```
+
+Or, from the folder consultants receive:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Start-Harita.ps1
+```
+
+You can also double-click `Start-Harita.bat` in that folder.
 
 Or with an absolute path:
 
