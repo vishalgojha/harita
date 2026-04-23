@@ -80,9 +80,9 @@ export function UploadDocumentForm({
         <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-[var(--color-surface-2)] text-[var(--color-text-secondary)]">
           <UploadCloud className="h-4 w-4" />
         </div>
-        <p className="mt-2 text-[11px] font-medium text-[var(--color-text-primary)]">Upload owner evidence</p>
+        <p className="mt-2 text-[11px] font-medium text-[var(--color-text-primary)]">Add a supporting file</p>
         <p className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">
-          Add one required document and it will appear in the checklist below.
+          Choose the file type, upload one file, and it will appear in the project checklist.
         </p>
       </div>
       <select
@@ -106,7 +106,7 @@ export function UploadDocumentForm({
       {error ? <p className="text-[11px] text-[var(--color-red)]">{error}</p> : null}
       <Button type="submit" className="h-8 w-full rounded-md" disabled={loading || disabled}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Upload document
+        Add file
       </Button>
     </form>
   );

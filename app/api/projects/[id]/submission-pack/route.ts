@@ -10,7 +10,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
   if (!mandatoryReady) {
     return NextResponse.json(
-      { error: "All mandatory credits must be complete before generating the submission pack." },
+      { error: "Finish all must-complete items before downloading the final package." },
       { status: 400 },
     );
   }

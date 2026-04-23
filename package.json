@@ -1,7 +1,33 @@
 {
-  "name": "harita",
+  "name": "@enov360/harita",
   "version": "0.1.0",
-  "private": true,
+  "description": "HaritaDocs launcher for consultants and project teams.",
+  "private": false,
+  "bin": {
+    "harita": "./bin/harita.mjs"
+  },
+  "files": [
+    "bin",
+    "app",
+    "components",
+    "data",
+    "lib",
+    "public",
+    "scripts",
+    "supabase/migrations",
+    "tests",
+    "README.md",
+    ".env.example",
+    ".eslintrc.json",
+    "components.json",
+    "middleware.ts",
+    "next.config.mjs",
+    "package.json",
+    "playwright.config.ts",
+    "postcss.config.mjs",
+    "tailwind.config.ts",
+    "tsconfig.json"
+  ],
   "scripts": {
     "dev": "next dev",
     "dev:guided": "bun run scripts/dev-guided.ts",
@@ -9,7 +35,7 @@
     "start": "next start",
     "lint": "eslint .",
     "seed": "node scripts/seed.mjs",
-    "onboard": "bun run scripts/onboard.ts",
+    "onboard": "node bin/harita.mjs",
     "smoke": "playwright test",
     "smoke:headed": "playwright test --headed"
   },

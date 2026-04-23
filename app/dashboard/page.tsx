@@ -23,11 +23,11 @@ export default async function DashboardPage() {
 
   return (
     <Shell
-      title="Consultant Dashboard"
+      title="Project dashboard"
       description={
         env.isConfigured
-          ? `Signed in as ${user?.email ?? "unknown user"}. All project trackers, review actions, and exports are live.`
-          : "Demo mode is active. The seeded catalog is visible until the live workspace connection is completed."
+          ? `Signed in as ${user?.email ?? "unknown user"}. Projects, uploads, and submission exports are ready.`
+          : "Demo mode is active. The seeded project list is visible until the live workspace connection is completed."
       }
       role="consultant"
       notificationCount={projects.reduce((sum, project) => sum + project.openRemarks, 0)}
@@ -36,10 +36,10 @@ export default async function DashboardPage() {
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Tracked credits", value: totals.totalCredits, meta: `${projects.length} active projects` },
-          { label: "Docs uploaded", value: totals.uploadedDocs, meta: "Across all workspaces" },
-          { label: "Mandatory met", value: totals.mandatoryCreditsMet, meta: "Ready for submission checks" },
-          { label: "Open remarks", value: totals.openRemarks, meta: "Needs consultant review" },
+          { label: "Projects", value: projects.length, meta: "Active workspaces" },
+          { label: "Files uploaded", value: totals.uploadedDocs, meta: "Across all projects" },
+          { label: "Ready items", value: totals.mandatoryCreditsMet, meta: "Useful for submission prep" },
+          { label: "Needs attention", value: totals.openRemarks, meta: "Notes waiting for review" },
         ].map((item) => (
           <div key={item.label} className="surface-card p-4">
             <p className="text-[11px] uppercase tracking-[0.06em] text-[var(--color-text-tertiary)]">
@@ -51,6 +51,23 @@ export default async function DashboardPage() {
             <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">{item.meta}</p>
           </div>
         ))}
+      </section>
+
+      <section className="surface-card mt-4 p-4">
+        <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr]">
+          <div>
+            <p className="dense-label">How to use this</p>
+            <h2 className="mt-2 text-[13px] font-medium text-[var(--color-text-primary)]">
+              Start with the project that has the most open notes.
+            </h2>
+            <p className="mt-2 text-[12px] text-[var(--color-text-secondary)]">
+              Open the checklist, add or review files, resolve notes, and then generate the submission pack when the project is ready.
+            </p>
+          </div>
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
+            If you are supporting multiple projects, this dashboard shows the ones most likely to need action first.
+          </div>
+        </div>
       </section>
 
       <section className="surface-card mt-4 p-4">
@@ -90,8 +107,7 @@ export default async function DashboardPage() {
               </div>
               <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{project.certification_type}</p>
               <p className="mt-3 text-[12px] text-[var(--color-text-secondary)]">
-                {project.totalCredits} credits · {project.uploadedDocs} docs · {project.mandatoryCreditsMet} mandatory
-                met · {project.openRemarks} remarks
+                {project.totalCredits} checklist items - {project.uploadedDocs} files - {project.mandatoryCreditsMet} ready - {project.openRemarks} notes
               </p>
               <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-3">
                 <Progress value={project.overallCompletion} />
@@ -102,10 +118,10 @@ export default async function DashboardPage() {
             </div>
             <div className="flex items-center gap-2 lg:justify-end">
               <Button asChild className="rounded-md px-3 text-[12px]">
-                <Link href={`/projects/${project.id}`}>Open workspace</Link>
+                <Link href={`/projects/${project.id}`}>Open checklist</Link>
               </Button>
               <Button asChild variant="secondary" className="rounded-md px-3 text-[12px]">
-                <Link href={`/projects/${project.id}/submission`}>Submission pack</Link>
+                <Link href={`/projects/${project.id}/submission`}>Prepare submission</Link>
               </Button>
             </div>
           </article>

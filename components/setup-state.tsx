@@ -7,8 +7,7 @@ export function SetupState() {
       <div className="flex min-w-0 items-center gap-2">
         <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-[var(--color-amber)]" />
         <p className="truncate">
-          Demo mode is active. Connect the live project database to enable login, file uploads, exports,
-          and real project data.
+          Demo mode is active. Connect the live database to turn on sign-in, file uploads, exports, and real project data.
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">

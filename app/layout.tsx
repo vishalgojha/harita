@@ -4,7 +4,7 @@ import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "HaritaDocs",
-  description: "IGBC certification document management for consultants and project owners.",
+  description: "A guided workspace for consultants and project teams to review files, track progress, and prepare submissions.",
 };
 
 export default function RootLayout({

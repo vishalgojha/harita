@@ -64,7 +64,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
   return (
     <Shell
       title={workspace.project.name}
-      description={`${workspace.project.certification_type} / Target ${workspace.project.target_rating}`}
+      description={`${workspace.project.certification_type} - Target ${workspace.project.target_rating} - Track uploads, notes, and progress in one view.`}
       role={workspace.userRole}
       notificationCount={workspace.notifications.filter((item) => !item.read_at).length}
     >
@@ -78,7 +78,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
           </div>
 
           <div className="mt-3">
-            <p className="dense-label px-2">Categories</p>
+            <p className="dense-label px-2">Browse by topic</p>
             <nav className="mt-2 space-y-1">
               <Link
                 href={`/projects/${params.id}${queryString({
@@ -93,7 +93,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
               >
                 <span className="flex items-center gap-2">
                   <span className="h-[7px] w-[7px] rounded-full bg-[var(--color-text-tertiary)]" />
-                  All credits
+                  All items
                 </span>
                 <span className="mono rounded-md bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px]">
                   {workspace.credits.length}
@@ -118,7 +118,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                   >
                     <span className="flex items-center gap-2">
                       <span className={`h-[7px] w-[7px] rounded-full ${meta.dot}`} />
-                      {item.key}
+                      {meta.label}
                     </span>
                     <span className="mono rounded-md bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px]">
                       {item.count}
@@ -130,7 +130,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
           </div>
 
           <div className="mt-4">
-            <p className="dense-label px-2">Status</p>
+            <p className="dense-label px-2">Progress</p>
             <div className="mt-2 space-y-1">
               {Object.entries(creditStatuses).map(([status, classes]) => {
                 const active = searchParams?.status === status;
@@ -159,10 +159,10 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
           <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
             <div className="flex items-center gap-2 text-[11px] font-medium text-[var(--color-red)]">
               <AlertTriangle className="h-3.5 w-3.5" />
-              Mandatory requirements
+              Must-complete items
             </div>
             <p className="mono mt-2 text-[12px] text-[var(--color-text-primary)]">
-              {mandatoryComplete}/{mandatoryCredits.length} complete
+              {mandatoryComplete}/{mandatoryCredits.length} finished
             </p>
           </div>
         </aside>
@@ -170,9 +170,9 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
         <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
           <div className="flex flex-col gap-3 border-b border-[var(--color-border)] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-[13px] font-medium text-[var(--color-text-primary)]">Credit tracker</h2>
+              <h2 className="text-[13px] font-medium text-[var(--color-text-primary)]">Project checklist</h2>
               <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
-                Dense review grid for approvals, remarks, and owner uploads.
+                Review items, upload files, and resolve notes without leaving the page.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -196,22 +196,22 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
               <thead className="sticky top-0 z-10 bg-[var(--color-surface-2)]">
                 <tr className="border-b border-[var(--color-border)]">
                   <th className="px-3 py-2 text-left text-[10px] uppercase tracking-[0.07em] text-[var(--color-text-tertiary)]">
-                    Credit code
+                    Item code
                   </th>
                   <th className="px-3 py-2 text-left text-[10px] uppercase tracking-[0.07em] text-[var(--color-text-tertiary)]">
-                    Credit name
+                    Item
                   </th>
                   <th className="px-3 py-2 text-left text-[10px] uppercase tracking-[0.07em] text-[var(--color-text-tertiary)]">
-                    Doc types
+                    Needed files
                   </th>
                   <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.07em] text-[var(--color-text-tertiary)]">
-                    % complete
+                    % done
                   </th>
                   <th className="px-3 py-2 text-left text-[10px] uppercase tracking-[0.07em] text-[var(--color-text-tertiary)]">
-                    Status
+                    Progress
                   </th>
                   <th className="px-3 py-2 text-left text-[10px] uppercase tracking-[0.07em] text-[var(--color-text-tertiary)]">
-                    Remark
+                    Latest note
                   </th>
                 </tr>
               </thead>
@@ -220,7 +220,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                   const selected = credit.id === selectedCredit.id;
                   const category = categoryMeta[credit.category as keyof typeof categoryMeta];
                   const displayCode = mandatoryCode(credit.credit_code, credit.is_mandatory);
-                  const preview = credit.remarks[0]?.body ?? credit.documentation_summary ?? "No remarks yet";
+                  const preview = credit.remarks[0]?.body ?? credit.documentation_summary ?? "No notes yet";
                   return (
                     <tr
                       key={credit.id}
@@ -308,16 +308,16 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
               <div className="rounded-lg border border-[var(--color-red-light)] bg-[var(--color-red-light)] p-3 text-[11px] text-[var(--color-red)]">
                 <div className="flex items-center gap-2 font-medium">
                   <FileWarning className="h-3.5 w-3.5" />
-                  Blocked by {selectedCredit.blocked_by ?? "consultant"}
+                  Waiting on {selectedCredit.blocked_by ?? "consultant"}
                 </div>
                 <p className="mt-1 text-[var(--color-text-secondary)]">
-                  {selectedCredit.remarks[0]?.body ?? "A blocking remark is pending."}
+                  {selectedCredit.remarks[0]?.body ?? "A note is pending before this item can move forward."}
                 </p>
               </div>
             ) : null}
 
             <section>
-              <p className="dense-label">Document checklist</p>
+              <p className="dense-label">Files needed</p>
               <div className="mt-2 space-y-2">
                 {selectedCredit.documents_required.map((doc) => {
                   const approved = selectedCredit.documents.some(
@@ -332,7 +332,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[11px] text-[var(--color-text-primary)]">{doc.label}</p>
                         <p className="truncate text-[10px] text-[var(--color-text-tertiary)]">
-                          {doc.required ? "Required for review" : "Not required for this credit"}
+                          {doc.required ? "Needed to continue" : "Optional for this item"}
                         </p>
                       </div>
                       {doc.required ? (
@@ -355,9 +355,9 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
               <div className="mt-2 space-y-2">
                 {selectedCredit.documents.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-[var(--color-border)] px-3 py-4 text-center">
-                    <p className="text-[11px] text-[var(--color-text-primary)]">No files uploaded</p>
+                    <p className="text-[11px] text-[var(--color-text-primary)]">No files uploaded yet</p>
                     <p className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">
-                      Upload a required document to start review.
+                      Add the first file to start review.
                     </p>
                   </div>
                 ) : (
@@ -430,12 +430,12 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
             <section>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-amber)]" />
-                <p className="dense-label">Remarks</p>
+                <p className="dense-label">Notes</p>
               </div>
               <div className="mt-2 space-y-2">
                 {selectedCredit.remarks.length === 0 ? (
                   <div className="rounded-lg border border-[var(--color-border)] px-3 py-3 text-[11px] text-[var(--color-text-tertiary)]">
-                    No remarks yet.
+                    No notes yet.
                   </div>
                 ) : (
                   selectedCredit.remarks.map((remark) => (
@@ -458,9 +458,9 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                 <input type="hidden" name="project_id" value={params.id} />
                 <input type="hidden" name="credit_id" value={selectedCredit.id} />
                 <input type="hidden" name="role" value={workspace.userRole === "owner" ? "owner" : "consultant"} />
-                <Textarea name="body" placeholder="Add a validation note or follow-up" />
+                <Textarea name="body" placeholder="Add a note for the team" />
                 <Button type="submit" className="h-8 w-full rounded-md">
-                  Add remark
+                  Add note
                 </Button>
               </form>
             </section>
@@ -472,7 +472,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                   <input type="hidden" name="credit_id" value={selectedCredit.id} />
                   <input type="hidden" name="action" value="complete" />
                   <Button type="submit" className="h-8 w-full rounded-md">
-                    Mark complete
+                    Mark as complete
                   </Button>
                 </form>
                 <form action={setCreditStateAction} className="space-y-2">
@@ -484,12 +484,12 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                     className="h-8 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-[11px] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)]"
                     defaultValue="owner"
                   >
-                    <option value="owner">Blocked by owner</option>
-                    <option value="consultant">Blocked by consultant</option>
-                    <option value="igbc">Blocked by IGBC</option>
+                    <option value="owner">Waiting on owner</option>
+                    <option value="consultant">Waiting on consultant</option>
+                    <option value="igbc">Waiting on IGBC</option>
                   </select>
                   <Button type="submit" variant="danger" className="h-8 w-full rounded-md">
-                    Set blocked
+                    Put on hold
                   </Button>
                 </form>
               </section>

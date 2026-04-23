@@ -11,47 +11,41 @@ The current UI is intentionally dense and operational rather than marketing-led:
 
 ## Fast onboarding
 
-For Windows setup, use the guided bootstrap instead of following setup steps manually.
+Harita now ships as a scoped npm package and a local app copy:
 
-Important:
+- Package name: `@enov360/harita`
+- CLI command: `harita`
 
-- If you cloned the repo, run the command from the `harita` folder, not from `C:\Users\<name>` or another parent folder.
-- If this project is being distributed to consultants as a folder or zip, they should use the root launcher files in that folder instead of the internal `scripts\` path.
-
-From the repo root:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\onboard.ps1
-```
-
-Or, from the folder consultants receive:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Start-Harita.ps1
-```
-
-You can also double-click `Start-Harita.bat` in that folder.
-
-Or with an absolute path:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File C:\path\to\harita\scripts\onboard.ps1
-```
-
-This flow will:
-
-1. Install `bun` if it is missing
-2. Run `bun install`
-3. Copy `.env.example` to `.env.local`
-4. Prompt for Supabase values one by one
-5. Optionally run `supabase link` and `supabase db push`
-6. Optionally seed a first project
-7. Launch the local studio and offer a Playwright smoke test
-
-If bun is already installed, the same flow can be launched directly with:
+Recommended install flow for consultants:
 
 ```bash
-bun run onboard
+npm install -g @enov360/harita
+```
+
+Then run `harita` from inside the Harita folder they received.
+
+You can also scaffold a fresh folder directly:
+
+```bash
+npx @enov360/harita
+```
+
+What the launcher does:
+
+1. Runs `npm install` if needed
+2. Prompts for one Gemini API key
+3. Creates `.env.local` with demo-safe defaults
+4. Shows a first-time tour of what Harita can do
+5. Lets the user choose what they want to do: review, upload, or prepare the final package
+6. Launches the app with local sample data
+7. If run in an empty folder, scaffolds the Harita workspace there first
+
+Install does not auto-open a TUI. The launcher starts after you run `harita` or `npx @enov360/harita`, so `npm install` stays non-interactive.
+
+For a local repo checkout, the same launcher is also available via:
+
+```bash
+npm run onboard
 ```
 
 ## Stack
@@ -62,30 +56,28 @@ bun run onboard
 - XLSX export via `xlsx`
 - ZIP submission pack via `jszip`
 - PDF summary via `pdf-lib`
-- Guided onboarding via `bun`
+- Guided onboarding via a Node-based CLI
 - Playwright smoke verification
 
 ## Setup
 
-1. Install dependencies with `npm install`
-2. Copy `.env.example` to `.env.local`
-3. Set:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` for `npm run seed`
-4. Apply `supabase/migrations/0001_initial.sql`
-5. Run `npm run dev`
+The default mode is local/demo, so consultants do not need to create a Supabase project.
 
-Without env vars, the app falls back to a seeded demo workspace so UI review still works locally.
-The guided launcher avoids crowded default ports by starting HaritaDocs on its own local port range beginning at `3010`.
+1. Install the package globally or run the local launcher
+2. Enter a Gemini API key
+3. Open the app in the generated workspace
+
+If you are developing the app itself, you can still run `npm install` and `npm run dev` directly.
 
 ## Guided commands
 
-- `bun run onboard`
-  Runs the full interactive setup wizard.
-- `bun run dev:guided`
-  Starts the app, waits for `/login`, and offers to run the smoke test.
-- `bun run smoke`
+- `harita`
+  Runs the one-key onboarding launcher and guided tour.
+- `npm run onboard`
+  Runs the same launcher from the repo checkout.
+- `npm run dev:guided`
+  Starts the app, waits for `/login`, opens the browser automatically, and can run the smoke test.
+- `npm run smoke`
   Runs the prebuilt Playwright smoke test.
 
 ## Database notes
@@ -94,15 +86,17 @@ The guided launcher avoids crowded default ports by starting HaritaDocs on its o
 - The credit matrix is derived from the CCIL tracker workbook you provided, not hand-entered
 - The tracker source produces 47 seeded rows including mandatory requirements, which differs from the original 42-credit note in the prompt
 
-## Optional automation env values
+## Environment defaults
 
-These are only needed if you want the onboarding wizard to automate Supabase linking and migration application:
+The onboarding wizard now writes the following automatically:
 
-- `SUPABASE_PROJECT_REF`
-- `SUPABASE_DB_PASSWORD`
-- `SUPABASE_ACCESS_TOKEN`
+- `GEMINI_API_KEY`
+- `AI_PROVIDER=gemini`
+- `AI_MODEL=gemini-2.5-flash`
+- `APP_MODE=demo`
+- demo-safe defaults for the remaining variables
 
-If these are blank, onboarding still completes the app env setup and launch flow, but skips automatic migration push.
+The app still falls back to demo mode if Supabase credentials are not present.
 
 ## Seed command
 

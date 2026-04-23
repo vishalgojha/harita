@@ -8,7 +8,20 @@ const rl = createInterface({ input: stdin, output: stdout });
 const requestedBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3010";
 
 function bunCommand() {
-  return process.platform === "win32" ? "bun.exe" : "bun";
+  return process.platform === "win32" ? "npm.cmd" : "npm";
+}
+
+function openBrowser(url: string) {
+  const platform = process.platform;
+  if (platform === "win32") {
+    spawn("cmd", ["/c", "start", "", url], { stdio: "ignore", shell: false, detached: true });
+    return;
+  }
+  if (platform === "darwin") {
+    spawn("open", [url], { stdio: "ignore", shell: false, detached: true });
+    return;
+  }
+  spawn("xdg-open", [url], { stdio: "ignore", shell: false, detached: true });
 }
 
 async function waitForServer(url: string, attempts = 90) {
@@ -79,6 +92,9 @@ async function main() {
     await waitForServer(`${baseUrl}/login`);
     console.log(`\nHaritaDocs is ready at ${baseUrl}`);
     console.log("If you stay in demo mode, the smoke test will walk through dashboard, project workspace, and submission flow.");
+
+    openBrowser(`${baseUrl}/login`);
+    console.log("The browser should open to the login page automatically.");
 
     if (await confirm("Run the Playwright smoke test now?", true)) {
       const smoke = spawn(

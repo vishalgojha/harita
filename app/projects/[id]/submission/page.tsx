@@ -15,7 +15,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
   return (
     <Shell
       title={`${workspace.project.name} Submission`}
-      description="Only completed credits and approved documents are included in the submission pack."
+      description="This view shows what is ready to send and what still needs attention before export."
       role={workspace.userRole}
       notificationCount={workspace.notifications.length}
     >
@@ -31,7 +31,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
                   <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">{credit.credit_name}</p>
                 </div>
                 <Badge className="border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[var(--color-green)]">
-                  Ready
+                  Included
                 </Badge>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -67,7 +67,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
               <div>
                 <h3 className="text-[13px] font-medium text-[var(--color-text-primary)]">Submission pack</h3>
                 <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
-                  Approved files are exported under `/[credit_code]/[doc_category]/[filename]`.
+                  Approved files are exported into folders that mirror the checklist structure.
                 </p>
               </div>
             </div>
@@ -81,8 +81,8 @@ export default async function SubmissionPage({ params }: { params: { id: string 
               }`}
             >
               {mandatoryReady
-                ? "All mandatory credits are complete. Submission pack export is enabled."
-                : "Mandatory credits are still pending. The ZIP export stays disabled until all mandatory requirements are complete."}
+                ? "All must-complete items are finished. The export is ready."
+                : "Some must-complete items are still pending, so export stays disabled for now."}
             </div>
             <Button asChild className="h-8 w-full rounded-md" variant={mandatoryReady ? "default" : "secondary"}>
               <Link
@@ -91,7 +91,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
                 className={!mandatoryReady ? "pointer-events-none opacity-60" : ""}
               >
                 <Download className="mr-1.5 h-3.5 w-3.5" />
-                Download submission pack
+                Download final package
               </Link>
             </Button>
           </CardContent>

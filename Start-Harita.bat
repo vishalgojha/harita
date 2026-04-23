@@ -1,5 +1,5 @@
 @echo off
 setlocal
 set "ROOT=%~dp0"
-powershell -ExecutionPolicy Bypass -File "%ROOT%Start-Harita.ps1" %*
+node "%ROOT%bin\harita.mjs" %*
 endlocal
