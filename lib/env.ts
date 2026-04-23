@@ -5,7 +5,7 @@ export const env = {
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
   aiProvider: process.env.AI_PROVIDER ?? "gemini",
   aiModel: process.env.AI_MODEL ?? "gemini-2.5-flash",
-  appMode: process.env.APP_MODE ?? "demo",
+  aiReady: Boolean(process.env.GEMINI_API_KEY),
   supabaseUrl: url,
   supabaseAnonKey: anonKey,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createProjectAction } from "@/app/actions";
+import { AiGuidePanel } from "@/components/assistant/ai-guide-panel";
 import { SetupState } from "@/components/setup-state";
 import { Shell } from "@/components/shell";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,38 @@ export default async function DashboardPage() {
     mandatoryCreditsMet: projects.reduce((sum, project) => sum + project.mandatoryCreditsMet, 0),
     openRemarks: projects.reduce((sum, project) => sum + project.openRemarks, 0),
   };
+  const prioritizedProjects = [...projects].sort(
+    (left, right) => right.openRemarks - left.openRemarks || left.overallCompletion - right.overallCompletion,
+  );
+  const focusProject = prioritizedProjects[0];
+  const dashboardContext = {
+    surface: "dashboard" as const,
+    title: "Dashboard prioritization",
+    currentItem: focusProject?.name,
+    summary:
+      projects.length === 0
+        ? "No projects are listed yet. The assistant should help the user create the first workspace and explain the setup order."
+        : `The dashboard contains ${projects.length} project(s), ${totals.openRemarks} open remark(s), and ${totals.mandatoryCreditsMet} mandatory items already complete.`,
+    facts: [
+      `Live connection: ${env.isConfigured ? "enabled" : "not configured yet"}.`,
+      focusProject
+        ? `Top priority project: ${focusProject.name} with ${focusProject.openRemarks} open remark(s) and ${focusProject.mandatoryCreditsMet}/${focusProject.totalCredits} checklist items complete.`
+        : "No project has been created yet.",
+      `Total uploaded files: ${totals.uploadedDocs}.`,
+      `Ready items across projects: ${totals.mandatoryCreditsMet}.`,
+    ],
+    nextSteps: focusProject
+      ? [
+          `Start with ${focusProject.name} because it has the most open remarks.`,
+          "Open the project checklist, review the blocked or incomplete items, and clear the notes first.",
+          "When the must-complete items are finished, generate the submission pack.",
+        ]
+      : [
+          "Create the first project so the workspace has an item to review.",
+          "Use the assistant to decide which checklist items to add first.",
+          "Connect Supabase when you want real sign-in, uploads, and persistence.",
+        ],
+  };
 
   return (
     <Shell
@@ -27,7 +60,7 @@ export default async function DashboardPage() {
       description={
         env.isConfigured
           ? `Signed in as ${user?.email ?? "unknown user"}. Projects, uploads, and submission exports are ready.`
-          : "Demo mode is active. The seeded project list is visible until the live workspace connection is completed."
+          : "Connect Supabase to access the live workspace."
       }
       role="consultant"
       notificationCount={projects.reduce((sum, project) => sum + project.openRemarks, 0)}
@@ -69,6 +102,37 @@ export default async function DashboardPage() {
           </div>
         </div>
       </section>
+
+      <div className="mt-4">
+        <AiGuidePanel
+          context={dashboardContext}
+          enabled={env.aiReady}
+          storageKey="assistant:dashboard"
+          title="AI guide for next steps"
+          description="Ask what should be handled first across all projects, or ask the assistant to explain the next action in plain language."
+          prompts={[
+            "Which project should I work on first?",
+            "What is blocking submission readiness?",
+            "How should I prioritize the open notes?",
+          ]}
+          suggestedActions={
+            focusProject
+              ? [
+                  {
+                    label: `Open ${focusProject.name}`,
+                    href: `/projects/${focusProject.id}`,
+                    description: "Jump into the highest-priority workspace the assistant identified.",
+                  },
+                  {
+                    label: "See submission prep",
+                    href: `/projects/${focusProject.id}/submission`,
+                    description: "Move directly to the submission checkpoint for the current priority project.",
+                  },
+                ]
+              : []
+          }
+        />
+      </div>
 
       <section className="surface-card mt-4 p-4">
         <form action={createProjectAction} className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_160px_auto]">

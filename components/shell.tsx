@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bell, Leaf } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { roleLabels } from "@/lib/constants";
 import type { MemberRole } from "@/lib/types";
 
@@ -39,6 +40,8 @@ export function Shell({
               <Bell className="h-3.5 w-3.5" />
               <span className="mono text-[11px]">{notificationCount ?? 0}</span>
             </Link>
+            <span className="h-4 w-px bg-[var(--color-border)]" aria-hidden="true" />
+            <ThemeToggle />
             <span className="h-4 w-px bg-[var(--color-border)]" aria-hidden="true" />
             <form action="/auth/signout" method="post">
               <button type="submit" className="text-[12px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">

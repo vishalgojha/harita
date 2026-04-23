@@ -90,32 +90,63 @@ export function buildTrackerWorkbook(workspace: ProjectWorkspace) {
 
 export async function buildProjectSummaryPdf(workspace: ProjectWorkspace) {
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([842, 595]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const pageWidth = 842;
+  const pageHeight = 595;
+  const left = 48;
+  const right = 48;
+  const top = 540;
+  const bottom = 48;
+  const rowHeight = 18;
+  const rowsPerPage = Math.floor((top - bottom - 24) / rowHeight);
 
-  page.drawText("HaritaDocs Project Summary", {
-    x: 48,
-    y: 540,
-    size: 22,
-    font: bold,
-    color: rgb(0.09, 0.35, 0.27),
-  });
-  page.drawText(`${workspace.project.name} • ${workspace.project.target_rating}`, {
-    x: 48,
-    y: 514,
-    size: 11,
-    font,
-    color: rgb(0.29, 0.37, 0.34),
-  });
+  function drawHeader(page: import("pdf-lib").PDFPage) {
+    page.drawText("HaritaDocs Project Summary", {
+      x: left,
+      y: top,
+      size: 22,
+      font: bold,
+      color: rgb(0.09, 0.35, 0.27),
+    });
+    page.drawText(`${workspace.project.name} • ${workspace.project.target_rating}`, {
+      x: left,
+      y: 514,
+      size: 11,
+      font,
+      color: rgb(0.29, 0.37, 0.34),
+    });
+    page.drawLine({
+      start: { x: left, y: 500 },
+      end: { x: pageWidth - right, y: 500 },
+      thickness: 0.75,
+      color: rgb(0.85, 0.87, 0.86),
+    });
+  }
 
-  let y = 480;
-  for (const credit of workspace.credits.slice(0, 22)) {
-    page.drawText(credit.credit_code, { x: 48, y, size: 10, font: bold });
-    page.drawText(credit.credit_name.slice(0, 40), { x: 130, y, size: 10, font });
+  function addPage() {
+    const page = pdf.addPage([pageWidth, pageHeight]);
+    drawHeader(page);
+    return page;
+  }
+
+  let page = addPage();
+  let y = 478;
+  let rowIndexOnPage = 0;
+
+  for (const credit of workspace.credits) {
+    if (rowIndexOnPage >= rowsPerPage) {
+      page = addPage();
+      y = 478;
+      rowIndexOnPage = 0;
+    }
+
+    page.drawText(credit.credit_code, { x: left, y, size: 10, font: bold });
+    page.drawText(credit.credit_name.slice(0, 44), { x: 130, y, size: 10, font });
     page.drawText(`${Math.round(credit.completion_pct)}%`, { x: 460, y, size: 10, font });
     page.drawText(credit.status, { x: 540, y, size: 10, font });
-    y -= 18;
+    y -= rowHeight;
+    rowIndexOnPage += 1;
   }
 
   return Buffer.from(await pdf.save());

@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { getProjectWorkspace } from "@/lib/data";
+import { getProjectWorkspaceForApi } from "@/lib/data";
 import { buildProjectSummaryPdf } from "@/lib/exports";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const workspace = await getProjectWorkspace(params.id);
+  const workspace = await getProjectWorkspaceForApi(params.id);
+  if (!workspace) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
   const buffer = await buildProjectSummaryPdf(workspace);
 
   return new NextResponse(new Uint8Array(buffer), {

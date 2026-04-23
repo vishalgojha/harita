@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { fileURLToPath } from "node:url";
+import { resolveBunExecutable } from "./runtime";
 
 const currentDir = fileURLToPath(new URL(".", import.meta.url));
 const projectRoot = resolve(currentDir, "..");
@@ -45,7 +46,6 @@ function writeEnvFile(values: EnvMap) {
     "GEMINI_API_KEY",
     "AI_PROVIDER",
     "AI_MODEL",
-    "APP_MODE",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -60,16 +60,6 @@ function writeEnvFile(values: EnvMap) {
 
   const lines = preferredOrder.map((key) => `${key}=${values[key] ?? ""}`);
   writeFileSync(envLocalPath, `${lines.join("\n")}\n`, "utf8");
-}
-
-function commandExists(command: string) {
-  const checker = process.platform === "win32" ? "where.exe" : "which";
-  const result = spawnSync(checker, [command], { stdio: "ignore" });
-  return result.status === 0;
-}
-
-function bunCommand() {
-  return process.platform === "win32" ? "bun.exe" : "bun";
 }
 
 async function ask(question: string, currentValue = "", secret = false) {
@@ -91,7 +81,8 @@ async function installDependencies() {
   section("Dependencies");
   console.log("This runs bun install so the app, onboarding tooling, and smoke test are ready.");
   if (await confirm("Run bun install now?", true)) {
-    const result = spawnSync(bunCommand(), ["install"], { cwd: projectRoot, stdio: "inherit", shell: false });
+    const bun = resolveBunExecutable();
+    const result = spawnSync(bun, ["install"], { cwd: projectRoot, stdio: "inherit", shell: false });
     if (result.status !== 0) {
       throw new Error(`bun install failed with exit code ${result.status ?? "unknown"}.`);
     }
@@ -104,10 +95,16 @@ async function configureEnv() {
   envValues.GEMINI_API_KEY = await ask("Paste your Gemini API key", envValues.GEMINI_API_KEY ?? "", true);
   envValues.AI_PROVIDER = "gemini";
   envValues.AI_MODEL = envValues.AI_MODEL || "gemini-2.5-flash";
-  envValues.APP_MODE = "demo";
-  envValues.NEXT_PUBLIC_SUPABASE_URL = "";
-  envValues.NEXT_PUBLIC_SUPABASE_ANON_KEY = "";
-  envValues.SUPABASE_SERVICE_ROLE_KEY = "";
+  envValues.NEXT_PUBLIC_SUPABASE_URL = await ask(
+    "Paste your Supabase project URL",
+    envValues.NEXT_PUBLIC_SUPABASE_URL ?? "",
+  );
+  envValues.NEXT_PUBLIC_SUPABASE_ANON_KEY = await ask(
+    "Paste your Supabase anon key",
+    envValues.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    true,
+  );
+  envValues.SUPABASE_SERVICE_ROLE_KEY = envValues.SUPABASE_SERVICE_ROLE_KEY || "";
   envValues.SUPABASE_PROJECT_REF = "";
   envValues.SUPABASE_DB_PASSWORD = "";
   envValues.SUPABASE_ACCESS_TOKEN = "";
@@ -117,18 +114,13 @@ async function configureEnv() {
   envValues.PLAYWRIGHT_BASE_URL = envValues.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3010";
 
   writeEnvFile(envValues);
-  console.log(".env.local updated for demo mode.");
+  console.log(".env.local updated.");
   return envValues;
 }
 
 async function main() {
   console.log("HaritaDocs onboarding");
-  console.log("This flow only asks for a Gemini API key. Everything else is auto-filled for demo mode.");
-
-  if (!commandExists("bun")) {
-    console.error("Bun is not installed. Run .\\scripts\\onboard.ps1 to install bun automatically first.");
-    process.exit(1);
-  }
+  console.log("This flow asks for your Gemini API key and the Supabase settings needed to run the live workspace.");
 
   try {
     await installDependencies();
@@ -137,7 +129,8 @@ async function main() {
     section("Launch");
     console.log("The guided dev launcher starts Next.js and can run the smoke test.");
     if (await confirm("Launch the local studio now?", true)) {
-      const result = spawnSync(bunCommand(), ["run", "dev:guided"], { cwd: projectRoot, stdio: "inherit", shell: false, env: process.env });
+      const bun = resolveBunExecutable();
+      const result = spawnSync(bun, ["run", "dev:guided"], { cwd: projectRoot, stdio: "inherit", shell: false, env: process.env });
       if (result.status !== 0) {
         throw new Error(`bun run dev:guided failed with exit code ${result.status ?? "unknown"}.`);
       }

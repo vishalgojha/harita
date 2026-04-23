@@ -1,11 +1,15 @@
 import { Leaf } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/login-form";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { env } from "@/lib/env";
 
 export default function LoginPage() {
   return (
-    <div className="mx-auto flex min-h-screen max-w-[1280px] items-center px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto flex min-h-screen max-w-[1280px] items-start px-4 py-6 sm:px-6 sm:py-8 lg:items-center lg:px-8">
+      <div className="fixed right-4 top-4 z-20 sm:right-6 sm:top-6 lg:right-8 lg:top-8">
+        <ThemeToggle />
+      </div>
       <div className="grid w-full gap-4 lg:grid-cols-[1.1fr_420px]">
         <Card className="overflow-hidden border-[var(--color-border)] bg-[var(--color-surface)]">
           <CardContent className="flex h-full flex-col justify-between gap-10 p-6 lg:p-8">
@@ -48,13 +52,14 @@ export default function LoginPage() {
             <p className="mt-1 text-[12px] text-[var(--color-text-secondary)]">
               {env.isConfigured
                 ? "Sign in to open your live project workspace."
-                : "The live workspace is not connected yet, so sign in opens the demo workspace."}
+                : "Connect Supabase to enable sign in and project data."
+              }
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <LoginForm demoMode={!env.isConfigured} />
+            <LoginForm disabled={!env.isConfigured} />
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
-              Demo mode is for UI review only. Real uploads, approvals, and project records require the live database connection.
+              Real uploads, approvals, and project records require a live Supabase connection.
             </div>
           </CardContent>
         </Card>

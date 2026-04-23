@@ -3,13 +3,10 @@ import { createServer } from "node:net";
 import { createInterface } from "node:readline/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { stdin, stdout } from "node:process";
+import { resolveBunExecutable } from "./runtime";
 
 const rl = createInterface({ input: stdin, output: stdout });
 const requestedBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3010";
-
-function bunCommand() {
-  return process.platform === "win32" ? "npm.cmd" : "npm";
-}
 
 function openBrowser(url: string) {
   const platform = process.platform;
@@ -73,8 +70,9 @@ async function main() {
   const requestedUrl = new URL(requestedBaseUrl);
   const port = await pickPort(Number(requestedUrl.port || "3010"));
   const baseUrl = `${requestedUrl.protocol}//${requestedUrl.hostname}:${port}`;
+  const bun = resolveBunExecutable();
 
-  const devServer = spawn(bunCommand(), ["run", "dev", "--", "--port", String(port)], {
+  const devServer = spawn(bun, ["run", "dev", "--", "--port", String(port)], {
     stdio: "inherit",
     shell: false,
     env: process.env,
@@ -91,7 +89,7 @@ async function main() {
   try {
     await waitForServer(`${baseUrl}/login`);
     console.log(`\nHaritaDocs is ready at ${baseUrl}`);
-    console.log("If you stay in demo mode, the smoke test will walk through dashboard, project workspace, and submission flow.");
+    console.log("The smoke test walks through dashboard, project workspace, and submission flow.");
 
     openBrowser(`${baseUrl}/login`);
     console.log("The browser should open to the login page automatically.");

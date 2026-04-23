@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Circle, Download, FileWarning, ShieldCheck } from "lucide-react";
 import { addRemarkAction, setCreditStateAction, setDocumentStatusAction } from "@/app/actions";
+import { AiGuidePanel } from "@/components/assistant/ai-guide-panel";
 import { UploadDocumentForm } from "@/components/project/upload-document-form";
 import { Shell } from "@/components/shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { categoryMeta, creditStatuses } from "@/lib/constants";
+import { env } from "@/lib/env";
 import { creditStats, getProjectWorkspace } from "@/lib/data";
 import { pct } from "@/lib/utils";
 
@@ -60,6 +62,30 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
   });
   const mandatoryCredits = workspace.credits.filter((credit) => credit.is_mandatory);
   const mandatoryComplete = mandatoryCredits.filter((credit) => credit.status === "complete").length;
+  const assistantContext = {
+    surface: "project" as const,
+    title: workspace.project.name,
+    currentItem: selectedCredit.credit_name,
+    summary: `Project ${workspace.project.name} is on ${workspace.project.target_rating} target rating with ${mandatoryComplete}/${mandatoryCredits.length} mandatory items complete.`,
+    facts: [
+      `Selected item: ${selectedCredit.credit_name} (${selectedCredit.status.replace("_", " ")}).`,
+      `Files needed for this item: ${selectedCredit.documents_required.length}.`,
+      `Uploaded files on this item: ${selectedCredit.documents.length}.`,
+      `Notes on this item: ${selectedCredit.remarks.length}.`,
+      selectedCredit.blocked_by ? `Blocked by: ${selectedCredit.blocked_by}.` : "This item is not currently blocked.",
+    ],
+    nextSteps: [
+      selectedCredit.documents_required.some((doc) => doc.required)
+        ? "Review the required files first and upload anything still missing."
+        : "No required files are listed, so focus on notes and status updates first.",
+      selectedCredit.status === "blocked"
+        ? `Resolve the blocker with ${selectedCredit.blocked_by ?? "the relevant owner"} before moving the item forward.`
+        : "If the item is in progress, finish the supporting files and then mark it complete.",
+      mandatoryComplete < mandatoryCredits.length
+        ? "Keep working through the mandatory items before preparing the submission pack."
+        : "The mandatory checklist is complete, so move toward export and submission packaging.",
+    ],
+  };
 
   return (
     <Shell
@@ -304,6 +330,36 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
           </div>
 
           <div className="space-y-4 px-4 py-4">
+            <AiGuidePanel
+              context={assistantContext}
+              enabled={env.aiReady}
+              storageKey={`assistant:project:${params.id}:${selectedCredit.id}`}
+              title="AI guide for this item"
+              description="Ask what is missing, which file to add next, or how to move this credit toward completion."
+              prompts={[
+                "What should I do next for this item?",
+                "Which files are still missing?",
+                "How do I clear this blocker?",
+              ]}
+              suggestedActions={[
+                {
+                  label: "Show this item only",
+                  href: `/projects/${params.id}?credit=${selectedCredit.id}`,
+                  description: "Keep the current item in focus and hide the rest of the checklist context.",
+                },
+                {
+                  label: "Filter blocked items",
+                  href: `/projects/${params.id}?status=blocked`,
+                  description: "Jump to the items that are currently blocked so you can clear them first.",
+                },
+                {
+                  label: "Open submission view",
+                  href: `/projects/${params.id}/submission`,
+                  description: "Go to the export checkpoint when you are ready to package the work.",
+                },
+              ]}
+            />
+
             {selectedCredit.status === "blocked" ? (
               <div className="rounded-lg border border-[var(--color-red-light)] bg-[var(--color-red-light)] p-3 text-[11px] text-[var(--color-red)]">
                 <div className="flex items-center gap-2 font-medium">

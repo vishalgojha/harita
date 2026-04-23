@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import { getProjectWorkspace } from "@/lib/data";
+import { getProjectWorkspaceForApi } from "@/lib/data";
 import { buildTrackerWorkbook } from "@/lib/exports";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const workspace = await getProjectWorkspace(params.id);
+  const workspace = await getProjectWorkspaceForApi(params.id);
+  if (!workspace) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
   const workbook = buildTrackerWorkbook(workspace);
   const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
 

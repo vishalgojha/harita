@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSubmissionWorkspace } from "@/lib/data";
+import { getProjectWorkspaceForApi } from "@/lib/data";
 import { buildSubmissionZip } from "@/lib/exports";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const workspace = await getSubmissionWorkspace(params.id);
+  const workspace = await getProjectWorkspaceForApi(params.id);
+  if (!workspace) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
   const mandatoryReady = workspace.credits
     .filter((credit) => credit.is_mandatory)
     .every((credit) => credit.status === "complete");

@@ -10,6 +10,27 @@ function pathFor(projectId: string) {
   return [`/dashboard`, `/projects/${projectId}`, `/projects/${projectId}/submission`];
 }
 
+function calculateCompletionPct(credit: {
+  na: boolean;
+  documents_required: { required: boolean }[];
+  documents: { doc_category: string; status: string }[];
+}) {
+  if (credit.na) {
+    return 100;
+  }
+
+  const requiredDocCount = credit.documents_required.filter((doc) => doc.required).length;
+  if (requiredDocCount === 0) {
+    return 100;
+  }
+
+  const approvedDocCount = new Set(
+    credit.documents.filter((file) => file.status === "approved").map((file) => file.doc_category),
+  ).size;
+
+  return Math.round((approvedDocCount / requiredDocCount) * 10000) / 100;
+}
+
 export async function createProjectAction(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const targetRating = String(formData.get("target_rating") ?? "Gold");
@@ -35,16 +56,21 @@ export async function addRemarkAction(formData: FormData) {
 
   const projectId = String(formData.get("project_id"));
   const creditId = String(formData.get("credit_id"));
-  const role = String(formData.get("role")) === "owner" ? "owner" : "consultant";
   const body = String(formData.get("body") ?? "").trim();
   if (!body) {
+    return;
+  }
+
+  const workspace = await getProjectWorkspace(projectId);
+  const credit = workspace.credits.find((item) => item.id === creditId);
+  if (!credit) {
     return;
   }
 
   const { error } = await client.from("remarks").insert({
     credit_id: creditId,
     author_id: user.id,
-    role,
+    role: workspace.userRole === "owner" ? "owner" : "consultant",
     body,
   });
 
@@ -67,6 +93,13 @@ export async function setDocumentStatusAction(formData: FormData) {
   const rejectionRemark = String(formData.get("rejection_remark") ?? "").trim();
   const creditId = String(formData.get("credit_id"));
   const user = await getCurrentUser();
+  const workspace = await getProjectWorkspace(projectId);
+  const credit = workspace.credits.find((item) => item.id === creditId);
+  const document = credit?.documents.find((item) => item.id === documentId);
+
+  if (!credit || !document) {
+    return;
+  }
 
   const { error } = await client.from("documents").update({ status }).eq("id", documentId);
   if (error) {
@@ -78,7 +111,7 @@ export async function setDocumentStatusAction(formData: FormData) {
       credit_id: creditId,
       document_id: documentId,
       author_id: user.id,
-      role: "consultant",
+      role: workspace.userRole === "owner" ? "owner" : "consultant",
       body: rejectionRemark,
     });
   }
@@ -95,16 +128,20 @@ export async function setCreditStateAction(formData: FormData) {
   const projectId = String(formData.get("project_id"));
   const creditId = String(formData.get("credit_id"));
   const action = String(formData.get("action"));
+  const workspace = await getProjectWorkspace(projectId);
+  const credit = workspace.credits.find((item) => item.id === creditId);
+
+  if (!credit) {
+    return;
+  }
 
   if (action === "complete") {
-    const workspace = await getProjectWorkspace(projectId);
-    const credit = workspace.credits.find((item) => item.id === creditId);
-    if (!credit || credit.documents_required.some((doc) => doc.required && !credit.documents.some((file) => file.doc_category === doc.type && file.status === "approved"))) {
+    if (credit.documents_required.some((doc) => doc.required && !credit.documents.some((file) => file.doc_category === doc.type && file.status === "approved"))) {
       return;
     }
     const { error } = await client
       .from("credits")
-      .update({ status: "complete", blocked_by: null })
+      .update({ status: "complete", blocked_by: null, completion_pct: 100 })
       .eq("id", creditId);
     if (error) {
       return;
@@ -113,9 +150,10 @@ export async function setCreditStateAction(formData: FormData) {
 
   if (action === "blocked") {
     const blockedBy = String(formData.get("blocked_by") ?? "consultant");
+    const completionPct = calculateCompletionPct(credit);
     const { error } = await client
       .from("credits")
-      .update({ status: "blocked", blocked_by: blockedBy })
+      .update({ status: "blocked", blocked_by: blockedBy, completion_pct: completionPct })
       .eq("id", creditId);
     if (error) {
       return;

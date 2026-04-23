@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { buildSeedCredits } from "@/lib/catalog";
 import { categoryMeta } from "@/lib/constants";
-import { getDemoWorkspace, demoProjects } from "@/lib/demo-data";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -48,9 +47,20 @@ async function getSupabaseUser(client: SupabaseClient) {
   return data.user ?? null;
 }
 
+async function getWorkspaceMembership(client: SupabaseClient, projectId: string, userId: string) {
+  const { data: membership } = await client
+    .from("project_members")
+    .select("role")
+    .eq("project_id", projectId)
+    .eq("user_id", userId)
+    .single();
+
+  return membership ?? null;
+}
+
 export async function getCurrentUser() {
   if (!env.isConfigured) {
-    return { id: "demo-user", email: "consultant@haritadocs.local" };
+    return null;
   }
 
   const client = createClient();
@@ -60,7 +70,7 @@ export async function getCurrentUser() {
 
 export async function getDashboardProjects() {
   if (!env.isConfigured) {
-    return demoProjects;
+    redirect("/login");
   }
 
   const client = createClient();
@@ -75,23 +85,52 @@ export async function getDashboardProjects() {
     .eq("user_id", user.id);
 
   const projects = memberships ?? [];
+  const projectIds = projects.map((membership) => membership.project_id);
+  const { data: creditsData } = projectIds.length
+    ? await client.from("credits").select("id, project_id, is_mandatory, status, completion_pct").in("project_id", projectIds)
+    : { data: [] as Record<string, any>[] };
+  const credits = creditsData ?? [];
+  const creditIds = credits.map((credit) => credit.id);
+  const [documentsResult, remarksResult] = await Promise.all([
+    projectIds.length
+      ? client.from("documents").select("project_id, id").in("project_id", projectIds)
+      : Promise.resolve({ data: [] as Record<string, any>[] }),
+    creditIds.length
+      ? client.from("remarks").select("credit_id, id").in("credit_id", creditIds)
+      : Promise.resolve({ data: [] as Record<string, any>[] }),
+  ]);
+  const documents = documentsResult.data ?? [];
+  const remarks = remarksResult.data ?? [];
+  const creditProjectMap = new Map<string, string>(
+    credits.map((credit) => [credit.id, credit.project_id] as const),
+  );
+  const creditsByProject = new Map<string, Record<string, any>[]>();
+  const documentsByProject = new Map<string, number>();
+  const remarksByProject = new Map<string, number>();
+
+  for (const credit of credits) {
+    const list = creditsByProject.get(credit.project_id) ?? [];
+    list.push(credit);
+    creditsByProject.set(credit.project_id, list);
+  }
+
+  for (const document of documents) {
+    documentsByProject.set(document.project_id, (documentsByProject.get(document.project_id) ?? 0) + 1);
+  }
+
+  for (const remark of remarks) {
+    const projectId = remark.credit_id ? creditProjectMap.get(remark.credit_id) : null;
+    if (!projectId) {
+      continue;
+    }
+    remarksByProject.set(projectId, (remarksByProject.get(projectId) ?? 0) + 1);
+  }
 
   const summaries = await Promise.all(
     projects.map(async (membership) => {
       const projectId = membership.project_id;
-      const { data: credits } = await client
-        .from("credits")
-        .select("id, is_mandatory, status, completion_pct")
-        .eq("project_id", projectId);
-      const creditIds = (credits ?? []).map((credit) => credit.id);
-      const [{ count: docsCount }, { count: remarksCount }] = await Promise.all([
-        client.from("documents").select("*", { count: "exact", head: true }).eq("project_id", projectId),
-        creditIds.length
-          ? client.from("remarks").select("*", { count: "exact", head: true }).in("credit_id", creditIds)
-          : Promise.resolve({ count: 0 }),
-      ]);
-      const creditRows = credits ?? [];
       const project = Array.isArray(membership.projects) ? membership.projects[0] : membership.projects;
+      const creditRows = creditsByProject.get(projectId) ?? [];
 
       return {
         id: project.id,
@@ -104,11 +143,11 @@ export async function getDashboardProjects() {
           creditRows.reduce((sum, credit) => sum + Number(credit.completion_pct ?? 0), 0) /
           Math.max(creditRows.length, 1),
         totalCredits: creditRows.length,
-        uploadedDocs: docsCount ?? 0,
+        uploadedDocs: documentsByProject.get(projectId) ?? 0,
         mandatoryCreditsMet: creditRows.filter(
           (credit) => credit.is_mandatory && credit.status === "complete",
         ).length,
-        openRemarks: remarksCount ?? 0,
+        openRemarks: remarksByProject.get(projectId) ?? 0,
       } satisfies ProjectSummary;
     }),
   );
@@ -118,8 +157,7 @@ export async function getDashboardProjects() {
 
 export async function getProjectWorkspace(projectId: string) {
   if (!env.isConfigured) {
-    const project = demoProjects.find((item) => item.id === projectId) ?? demoProjects[0];
-    return getDemoWorkspace(project.id, project.role);
+    redirect("/login");
   }
 
   const client = createClient();
@@ -128,15 +166,57 @@ export async function getProjectWorkspace(projectId: string) {
     redirect("/login");
   }
 
-  const { data: membership } = await client
-    .from("project_members")
-    .select("role")
-    .eq("project_id", projectId)
-    .eq("user_id", user.id)
-    .single();
+  const membership = await getWorkspaceMembership(client, projectId, user.id);
 
   if (!membership) {
     redirect("/dashboard");
+  }
+
+  const [{ data: project }, { data: credits }, { data: documents }, { data: notifications }] =
+    await Promise.all([
+      client.from("projects").select("*").eq("id", projectId).single(),
+      client.from("credits").select("*").eq("project_id", projectId).order("credit_code"),
+      client
+        .from("documents")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("uploaded_at", { ascending: false }),
+      client
+        .from("notifications")
+        .select("id, body, created_at, read_at")
+        .eq("user_id", user.id)
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+    ]);
+  const creditIds = (credits ?? []).map((credit) => credit.id);
+  const { data: remarks } = creditIds.length
+    ? await client.from("remarks").select("*").in("credit_id", creditIds).order("created_at", { ascending: false })
+    : { data: [] };
+
+  const mappedCredits = (credits ?? []).map((credit) => mapCredit(credit, documents ?? [], remarks ?? []));
+
+  return {
+    project,
+    userRole: normalizeRole(membership.role),
+    credits: mappedCredits,
+    notifications: notifications ?? [],
+  } satisfies ProjectWorkspace;
+}
+
+export async function getProjectWorkspaceForApi(projectId: string) {
+  if (!env.isConfigured) {
+    return null;
+  }
+
+  const client = createClient();
+  const user = await getSupabaseUser(client);
+  if (!user) {
+    return null;
+  }
+
+  const membership = await getWorkspaceMembership(client, projectId, user.id);
+  if (!membership) {
+    return null;
   }
 
   const [{ data: project }, { data: credits }, { data: documents }, { data: notifications }] =
@@ -204,7 +284,7 @@ export async function createProjectForCurrentUser({
   targetRating: string;
 }) {
   if (!env.isConfigured) {
-    return { id: "demo-project" };
+    redirect("/login");
   }
 
   const client = createClient();
@@ -230,7 +310,7 @@ export async function createProjectForCurrentUser({
   const membershipError = await client.from("project_members").insert({
     project_id: project.id,
     user_id: user.id,
-    role: "consultant",
+    role: "owner",
   });
 
   if (membershipError.error) {

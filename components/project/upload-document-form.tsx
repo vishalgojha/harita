@@ -21,6 +21,8 @@ export function UploadDocumentForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [docType, setDocType] = useState(docTypes[0] ?? "Narrative");
+  const maxFileSizeBytes = 50 * 1024 * 1024;
+  const maxFileSizeLabel = "50 MB";
   const accept = useMemo(() => ".pdf,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.dwg,.mp4,.mov", []);
 
   async function onUpload(event: React.FormEvent<HTMLFormElement>) {
@@ -33,6 +35,11 @@ export function UploadDocumentForm({
     const file = formData.get("file");
     if (!(file instanceof File)) {
       setError("Choose a file to upload.");
+      return;
+    }
+
+    if (file.size > maxFileSizeBytes) {
+      setError(`File is too large. The limit is ${maxFileSizeLabel}.`);
       return;
     }
 
@@ -82,7 +89,7 @@ export function UploadDocumentForm({
         </div>
         <p className="mt-2 text-[11px] font-medium text-[var(--color-text-primary)]">Add a supporting file</p>
         <p className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">
-          Choose the file type, upload one file, and it will appear in the project checklist.
+          Choose the file type, upload one file, and it will appear in the project checklist. Max size: {maxFileSizeLabel}.
         </p>
       </div>
       <select

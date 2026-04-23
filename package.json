@@ -1,8 +1,31 @@
 {
-  "name": "@enov360/harita",
+  "name": "harita-studio",
   "version": "0.1.0",
   "description": "HaritaDocs launcher for consultants and project teams.",
   "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vishalgojha/harita.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vishalgojha/harita/issues"
+  },
+  "homepage": "https://github.com/vishalgojha/harita#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": [
+    "harita",
+    "haritadocs",
+    "igbc",
+    "consulting",
+    "nextjs",
+    "cli"
+  ],
   "bin": {
     "harita": "./bin/harita.mjs"
   },
@@ -17,6 +40,7 @@
     "supabase/migrations",
     "tests",
     "README.md",
+    "LICENSE",
     ".env.example",
     ".eslintrc.json",
     "components.json",
@@ -34,6 +58,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "prepublishOnly": "npm run lint",
+    "publish:public": "npm publish --access public",
     "seed": "node scripts/seed.mjs",
     "onboard": "node bin/harita.mjs",
     "smoke": "playwright test",
