@@ -60,8 +60,10 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
     const statusOk = searchParams?.status ? credit.status === searchParams.status : true;
     return categoryOk && statusOk;
   });
+  const hasFilteredCredits = filteredCredits.length > 0;
   const mandatoryCredits = workspace.credits.filter((credit) => credit.is_mandatory);
   const mandatoryComplete = mandatoryCredits.filter((credit) => credit.status === "complete").length;
+  const completionPct = mandatoryCredits.length ? Math.round((mandatoryComplete / mandatoryCredits.length) * 100) : 0;
   const assistantContext = {
     surface: "project" as const,
     title: workspace.project.name,
@@ -94,7 +96,63 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
       role={workspace.userRole}
       notificationCount={workspace.notifications.filter((item) => !item.read_at).length}
     >
-      <div className="grid gap-4 xl:grid-cols-[200px_minmax(0,1fr)_280px]">
+      <section className="surface-card overflow-hidden p-5">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_280px] lg:items-end">
+          <div className="max-w-[900px]">
+            <p className="dense-label">Project workspace</p>
+            <h2 className="mt-2 text-[20px] font-medium leading-tight text-[var(--color-text-primary)]">
+              {workspace.project.name}
+            </h2>
+            <p className="mt-2 max-w-[70ch] text-[13px] leading-6 text-[var(--color-text-secondary)]">
+              Review credits, upload evidence, and resolve notes from one screen. The selected item stays in focus while the rest of the checklist stays easy to scan.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge className="border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[11px] text-[var(--color-green)]">
+                {workspace.project.target_rating}
+              </Badge>
+              <Badge className="border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[11px] text-[var(--color-text-secondary)]">
+                {workspace.project.certification_type}
+              </Badge>
+              <Badge className="border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[11px] text-[var(--color-text-secondary)]">
+                {workspace.credits.length} items
+              </Badge>
+              <Badge className="border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[11px] text-[var(--color-text-secondary)]">
+                {mandatoryCredits.length} mandatory
+              </Badge>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Mandatory progress</p>
+                <p className="mono mt-2 text-[26px] font-medium text-[var(--color-text-primary)]">{completionPct}%</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Selected item</p>
+                <p className="mt-2 max-w-[10rem] truncate text-[14px] font-medium text-[var(--color-text-primary)]">
+                  {selectedCredit.credit_name}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] text-[var(--color-text-secondary)]">
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Open notes</p>
+                <p className="mono mt-1 text-[18px] font-medium text-[var(--color-text-primary)]">
+                  {workspace.credits.reduce((sum, credit) => sum + credit.remarks.length, 0)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Files uploaded</p>
+                <p className="mono mt-1 text-[18px] font-medium text-[var(--color-text-primary)]">
+                  {workspace.credits.reduce((sum, credit) => sum + credit.documents.length, 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_300px]">
         <aside className="rounded-xl border-r border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-4">
           <div className="border-b border-[var(--color-border)] px-2 pb-3">
             <p className="truncate text-[13px] font-medium text-[var(--color-text-primary)]">
@@ -194,11 +252,11 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
         </aside>
 
         <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
-          <div className="flex flex-col gap-3 border-b border-[var(--color-border)] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-[13px] font-medium text-[var(--color-text-primary)]">Project checklist</h2>
-              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
-                Review items, upload files, and resolve notes without leaving the page.
+            <div className="flex flex-col gap-3 border-b border-[var(--color-border)] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-[13px] font-medium text-[var(--color-text-primary)]">Project checklist</h2>
+                <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
+                  Review items, upload files, and resolve notes without leaving the page.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -242,7 +300,8 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                 </tr>
               </thead>
               <tbody>
-                {filteredCredits.map((credit) => {
+                {hasFilteredCredits ? (
+                  filteredCredits.map((credit) => {
                   const selected = credit.id === selectedCredit.id;
                   const category = categoryMeta[credit.category as keyof typeof categoryMeta];
                   const displayCode = mandatoryCode(credit.credit_code, credit.is_mandatory);
@@ -306,7 +365,22 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
                       </td>
                     </tr>
                   );
-                })}
+                })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center">
+                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]">No items match these filters</p>
+                      <p className="mt-2 text-[11px] text-[var(--color-text-secondary)]">
+                        Clear the category or status filters to see the full checklist again.
+                      </p>
+                      <div className="mt-4">
+                        <Button asChild variant="secondary" className="h-8 rounded-full px-4 text-[12px]">
+                          <Link href={`/projects/${params.id}`}>Reset filters</Link>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

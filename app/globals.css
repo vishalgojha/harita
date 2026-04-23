@@ -63,7 +63,10 @@ body {
 
 body {
   margin: 0;
-  background: var(--color-bg);
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.06), transparent 26%),
+    radial-gradient(circle at top right, rgba(29, 158, 117, 0.08), transparent 24%),
+    var(--color-bg);
   color: var(--color-text-primary);
   font-family: "Geist Sans", "Segoe UI", sans-serif;
   font-feature-settings: "ss01" 1, "cv05" 1;
@@ -71,8 +74,9 @@ body {
 
 .dark body {
   background:
-    radial-gradient(circle at top left, rgba(86, 199, 160, 0.08), transparent 28%),
-    radial-gradient(circle at top right, rgba(122, 167, 255, 0.08), transparent 24%),
+    radial-gradient(circle at top left, rgba(86, 199, 160, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(122, 167, 255, 0.1), transparent 24%),
+    radial-gradient(circle at bottom center, rgba(177, 140, 255, 0.05), transparent 28%),
     var(--color-bg);
 }
 
@@ -127,13 +131,14 @@ a:focus-visible {
   .surface-card {
     border: 1px solid var(--color-border);
     background: var(--color-surface);
-    border-radius: 12px;
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   }
 
   .surface-muted {
     border: 1px solid var(--color-border);
     background: var(--color-surface-2);
-    border-radius: 12px;
+    border-radius: 16px;
   }
 
   .dense-label {
@@ -159,4 +164,22 @@ a:focus-visible {
   .hairline {
     border-color: var(--color-border);
   }
+}
+
+.surface-card,
+.surface-muted {
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+
+.surface-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.dark .surface-card:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
 }

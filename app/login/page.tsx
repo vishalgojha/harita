@@ -11,24 +11,30 @@ export default function LoginPage() {
         <ThemeToggle />
       </div>
       <div className="grid w-full gap-4 lg:grid-cols-[1.1fr_420px]">
-        <Card className="overflow-hidden border-[var(--color-border)] bg-[var(--color-surface)]">
-          <CardContent className="flex h-full flex-col justify-between gap-10 p-6 lg:p-8">
+        <Card className="surface-card relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(29,158,117,0.06),transparent_42%),linear-gradient(225deg,rgba(37,99,235,0.05),transparent_36%)]" />
+          <CardContent className="relative flex h-full flex-col justify-between gap-10 p-6 lg:p-8">
             <div className="flex items-center gap-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-green)] text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-green)] text-white shadow-sm shadow-[rgba(29,158,117,0.2)]">
                 <Leaf className="h-3.5 w-3.5" />
               </div>
-              <span className="text-[15px] font-medium text-[var(--color-text-primary)]">HaritaDocs</span>
+              <div>
+                <span className="block text-[15px] font-medium text-[var(--color-text-primary)]">HaritaDocs</span>
+                <span className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">
+                  Consultant documentation workspace
+                </span>
+              </div>
             </div>
 
             <div className="max-w-[560px] space-y-4">
               <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">
                 Guided project review workspace
               </p>
-              <h1 className="text-[15px] font-medium leading-6 text-[var(--color-text-primary)]">
-                A simpler way for consultants and project teams to review files, track progress, and finish submissions.
+              <h1 className="max-w-[14ch] text-[34px] font-medium leading-[0.96] tracking-[-0.03em] text-[var(--color-text-primary)] sm:text-[42px]">
+                Review files without losing the thread.
               </h1>
-              <p className="text-[13px] leading-6 text-[var(--color-text-secondary)]">
-                See what needs attention, upload supporting files in one place, and move projects forward without juggling spreadsheets and chat threads.
+              <p className="max-w-[60ch] text-[13px] leading-6 text-[var(--color-text-secondary)]">
+                See what needs attention, upload supporting files in one place, and move projects forward without juggling spreadsheets, chat threads, or disconnected review notes.
               </p>
             </div>
 
@@ -38,7 +44,7 @@ export default function LoginPage() {
                 "One place for notes, uploads, and approvals",
                 "Export a final submission pack when the work is ready",
               ].map((item) => (
-                <div key={item} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
+                <div key={item} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
                   {item}
                 </div>
               ))}
@@ -46,9 +52,10 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <Card className="self-center">
+        <Card className="surface-card self-center">
           <CardHeader>
-            <h2 className="text-[15px] font-medium text-[var(--color-text-primary)]">Sign in</h2>
+            <p className="dense-label">Workspace access</p>
+            <h2 className="mt-2 text-[15px] font-medium text-[var(--color-text-primary)]">Sign in</h2>
             <p className="mt-1 text-[12px] text-[var(--color-text-secondary)]">
               {env.isConfigured
                 ? "Sign in to open your live project workspace."
@@ -58,8 +65,19 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <LoginForm disabled={!env.isConfigured} />
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
               Real uploads, approvals, and project records require a live Supabase connection.
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-[10px] text-[var(--color-text-tertiary)]">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
+                Invite only
+              </div>
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
+                Live data
+              </div>
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
+                AI guided
+              </div>
             </div>
           </CardContent>
         </Card>

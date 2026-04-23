@@ -14,6 +14,7 @@ import { pct } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const [user, projects] = await Promise.all([getCurrentUser(), getDashboardProjects()]);
+  const hasProjects = projects.length > 0;
 
   const totals = {
     totalCredits: projects.reduce((sum, project) => sum + project.totalCredits, 0),
@@ -21,6 +22,9 @@ export default async function DashboardPage() {
     mandatoryCreditsMet: projects.reduce((sum, project) => sum + project.mandatoryCreditsMet, 0),
     openRemarks: projects.reduce((sum, project) => sum + project.openRemarks, 0),
   };
+  const overallCompletion = hasProjects
+    ? projects.reduce((sum, project) => sum + project.overallCompletion, 0) / projects.length
+    : 0;
   const prioritizedProjects = [...projects].sort(
     (left, right) => right.openRemarks - left.openRemarks || left.overallCompletion - right.overallCompletion,
   );
@@ -67,7 +71,98 @@ export default async function DashboardPage() {
     >
       {!env.isConfigured ? <SetupState /> : null}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="surface-card overflow-hidden p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-[720px]">
+              <p className="dense-label">Workspace pulse</p>
+              <h2 className="mt-2 text-[20px] font-medium leading-tight text-[var(--color-text-primary)]">
+                Keep the highest-risk items moving first.
+              </h2>
+              <p className="mt-2 text-[13px] leading-6 text-[var(--color-text-secondary)]">
+                The dashboard groups current work by urgency, so you can see what needs attention, what is already ready, and where the next submission block is likely to be.
+              </p>
+            </div>
+            <div className="grid min-w-[220px] grid-cols-2 gap-2">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Average progress</p>
+                <p className="mono mt-2 text-[24px] font-medium text-[var(--color-text-primary)]">{pct(overallCompletion)}</p>
+              </div>
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Priority item</p>
+                <p className="mt-2 truncate text-[14px] font-medium text-[var(--color-text-primary)]">
+                  {focusProject?.name ?? "No project yet"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {[
+              {
+                label: "Open remarks",
+                value: totals.openRemarks,
+                help: "Items waiting for review",
+              },
+              {
+                label: "Mandatory ready",
+                value: totals.mandatoryCreditsMet,
+                help: "Useful for export readiness",
+              },
+              {
+                label: "Uploaded files",
+                value: totals.uploadedDocs,
+                help: "Across every workspace",
+              },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">{item.label}</p>
+                <p className="mono mt-2 text-[22px] font-medium text-[var(--color-text-primary)]">{item.value}</p>
+                <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{item.help}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="surface-card p-5">
+          <p className="dense-label">Focus now</p>
+          {focusProject ? (
+            <div className="mt-3 space-y-3">
+              <div>
+                <h3 className="text-[16px] font-medium text-[var(--color-text-primary)]">{focusProject.name}</h3>
+                <p className="mt-1 text-[12px] text-[var(--color-text-secondary)]">
+                  {focusProject.totalCredits} checklist items, {focusProject.openRemarks} open note
+                  {focusProject.openRemarks === 1 ? "" : "s"}, and {focusProject.mandatoryCreditsMet} mandatory items already complete.
+                </p>
+              </div>
+              <Progress value={focusProject.overallCompletion} />
+              <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--color-text-secondary)]">
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Role</p>
+                  <p className="mt-1 font-medium text-[var(--color-text-primary)]">{roleLabels[focusProject.role]}</p>
+                </div>
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Completion</p>
+                  <p className="mono mt-1 font-medium text-[var(--color-text-primary)]">{pct(focusProject.overallCompletion)}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild className="h-8 rounded-full px-4 text-[12px]">
+                  <Link href={`/projects/${focusProject.id}`}>Open priority project</Link>
+                </Button>
+                <Button asChild variant="secondary" className="h-8 rounded-full px-4 text-[12px]">
+                  <Link href={`/projects/${focusProject.id}/submission`}>Prep submission</Link>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)] p-4 text-[12px] text-[var(--color-text-secondary)]">
+              Create your first project to start tracking credits, uploads, and submission readiness.
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: "Projects", value: projects.length, meta: "Active workspaces" },
           { label: "Files uploaded", value: totals.uploadedDocs, meta: "Across all projects" },
@@ -75,12 +170,8 @@ export default async function DashboardPage() {
           { label: "Needs attention", value: totals.openRemarks, meta: "Notes waiting for review" },
         ].map((item) => (
           <div key={item.label} className="surface-card p-4">
-            <p className="text-[11px] uppercase tracking-[0.06em] text-[var(--color-text-tertiary)]">
-              {item.label}
-            </p>
-            <p className="mono mt-2 text-[28px] font-medium leading-none text-[var(--color-text-primary)]">
-              {item.value}
-            </p>
+            <p className="text-[11px] uppercase tracking-[0.06em] text-[var(--color-text-tertiary)]">{item.label}</p>
+            <p className="mono mt-2 text-[28px] font-medium leading-none text-[var(--color-text-primary)]">{item.value}</p>
             <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">{item.meta}</p>
           </div>
         ))}
@@ -97,7 +188,7 @@ export default async function DashboardPage() {
               Open the checklist, add or review files, resolve notes, and then generate the submission pack when the project is ready.
             </p>
           </div>
-          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
             If you are supporting multiple projects, this dashboard shows the ones most likely to need action first.
           </div>
         </div>
@@ -154,42 +245,79 @@ export default async function DashboardPage() {
         </form>
       </section>
 
-      <section className="mt-4 grid gap-3">
-        {projects.map((project) => (
-          <article key={project.id} className="surface-card flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-[15px] font-medium text-[var(--color-text-primary)]">
-                  {project.name}
-                </h2>
-                <Badge className="border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[11px] text-[var(--color-green)]">
-                  {project.target_rating}
-                </Badge>
-                <Badge className="border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[11px] text-[var(--color-text-secondary)]">
-                  {roleLabels[project.role]}
-                </Badge>
-              </div>
-              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{project.certification_type}</p>
-              <p className="mt-3 text-[12px] text-[var(--color-text-secondary)]">
-                {project.totalCredits} checklist items - {project.uploadedDocs} files - {project.mandatoryCreditsMet} ready - {project.openRemarks} notes
+      <section className="mt-4">
+        <div className="surface-card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="dense-label">Projects</p>
+              <h2 className="mt-2 text-[15px] font-medium text-[var(--color-text-primary)]">Current workspaces</h2>
+            </div>
+            <p className="text-[11px] text-[var(--color-text-tertiary)]">
+              {hasProjects ? "Open the workspace with the most blockers first." : "No workspaces yet."}
+            </p>
+          </div>
+
+          {hasProjects ? (
+            <div className="mt-4 grid gap-3">
+              {projects.map((project) => (
+                <article
+                  key={project.id}
+                  className="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 hover:border-[var(--color-border-strong)]"
+                >
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_200px] lg:items-center">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="truncate text-[15px] font-medium text-[var(--color-text-primary)]">{project.name}</h3>
+                        <Badge className="border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[11px] text-[var(--color-green)]">
+                          {project.target_rating}
+                        </Badge>
+                        <Badge className="border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[11px] text-[var(--color-text-secondary)]">
+                          {roleLabels[project.role]}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{project.certification_type}</p>
+                      <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-secondary)]">
+                        <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2.5 py-1">
+                          {project.totalCredits} items
+                        </span>
+                        <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2.5 py-1">
+                          {project.uploadedDocs} files
+                        </span>
+                        <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2.5 py-1">
+                          {project.mandatoryCreditsMet} ready
+                        </span>
+                        <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2.5 py-1">
+                          {project.openRemarks} notes
+                        </span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-3">
+                        <Progress value={project.overallCompletion} />
+                        <span className="mono text-[12px] text-[var(--color-text-secondary)]">
+                          {pct(project.overallCompletion)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 lg:justify-end">
+                      <Button asChild className="h-8 rounded-full px-4 text-[12px]">
+                        <Link href={`/projects/${project.id}`}>Open checklist</Link>
+                      </Button>
+                      <Button asChild variant="secondary" className="h-8 rounded-full px-4 text-[12px]">
+                        <Link href={`/projects/${project.id}/submission`}>Prepare submission</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)] p-6">
+              <p className="text-[13px] font-medium text-[var(--color-text-primary)]">No projects yet</p>
+              <p className="mt-2 max-w-[64ch] text-[12px] leading-6 text-[var(--color-text-secondary)]">
+                Create the first workspace above, then use the checklist and uploads to start gathering the documentation your team needs.
               </p>
-              <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-3">
-                <Progress value={project.overallCompletion} />
-                <span className="mono text-[12px] text-[var(--color-text-secondary)]">
-                  {pct(project.overallCompletion)}
-                </span>
-              </div>
             </div>
-            <div className="flex items-center gap-2 lg:justify-end">
-              <Button asChild className="rounded-md px-3 text-[12px]">
-                <Link href={`/projects/${project.id}`}>Open checklist</Link>
-              </Button>
-              <Button asChild variant="secondary" className="rounded-md px-3 text-[12px]">
-                <Link href={`/projects/${project.id}/submission`}>Prepare submission</Link>
-              </Button>
-            </div>
-          </article>
-        ))}
+          )}
+        </div>
       </section>
     </Shell>
   );

@@ -178,29 +178,34 @@ export function AiGuidePanel({
 
   return (
     <section className="surface-card overflow-hidden">
-      <div className="flex items-start justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3">
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/70 px-4 py-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-green-light)] text-[var(--color-green)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-green-light)] text-[var(--color-green)]">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
-            <h2 className="text-[13px] font-medium text-[var(--color-text-primary)]">{title}</h2>
+            <div className="min-w-0">
+              <h2 className="text-[13px] font-medium text-[var(--color-text-primary)]">{title}</h2>
+              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
+                Uses the current page context to suggest the next best step.
+              </p>
+            </div>
           </div>
-          <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
-            {enabled ? "Gemini connected. Ask for next steps, blockers, or upload priorities." : "Demo guidance is active until Gemini is connected."}
-          </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2 py-1 text-[10px] text-[var(--color-text-tertiary)]">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-[10px] text-[var(--color-text-tertiary)]">
+            {enabled ? "Gemini ready" : "Connect Gemini in .env.local"}
+          </div>
           <Bot className="h-3 w-3" />
-          <span>{enabled ? "AI ready" : "Demo mode"}</span>
+          <span>{enabled ? "Context-aware guidance" : "Assistant unavailable"}</span>
         </div>
       </div>
 
-      <div className="max-h-[320px] space-y-3 overflow-y-auto px-4 py-4">
+      <div className="max-h-[360px] space-y-3 overflow-y-auto px-4 py-4">
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
-            className={`max-w-[92%] rounded-xl border px-3 py-2 text-[12px] leading-6 ${
+            className={`max-w-[92%] rounded-2xl border px-3 py-2 text-[12px] leading-6 shadow-sm ${
               message.role === "user"
                 ? "ml-auto border-[var(--color-blue-light)] bg-[var(--color-blue-light)] text-[var(--color-blue)]"
                 : "border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-primary)]"
@@ -217,7 +222,7 @@ export function AiGuidePanel({
         <div ref={bottomRef} />
       </div>
 
-      <div className="space-y-3 border-t border-[var(--color-border)] px-4 py-4">
+      <div className="space-y-3 border-t border-[var(--color-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)] px-4 py-4">
         <div className="flex flex-wrap gap-2">
           {prompts.map((prompt) => (
             <button
@@ -225,7 +230,7 @@ export function AiGuidePanel({
               type="button"
               onClick={() => void sendMessage(prompt)}
               disabled={isLoading}
-              className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1.5 text-left text-[11px] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]"
+              className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1.5 text-left text-[11px] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]"
             >
               {prompt}
             </button>
@@ -258,12 +263,12 @@ export function AiGuidePanel({
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder="Ask what to do next, what is blocked, or which files are missing..."
-            className="min-h-[84px] resize-none"
+            className="min-h-[92px] resize-none"
           />
           {error ? <p className="text-[11px] text-[var(--color-red)]">{error}</p> : null}
-          <Button type="submit" className="h-8 w-full rounded-md" disabled={isLoading || !input.trim()}>
+          <Button type="submit" className="h-8 w-full rounded-md" disabled={isLoading || !input.trim() || !enabled}>
             <Send className="mr-2 h-3.5 w-3.5" />
-            Ask AI guide
+            {enabled ? "Ask AI guide" : "Connect Gemini first"}
           </Button>
         </form>
       </div>
