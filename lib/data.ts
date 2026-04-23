@@ -9,6 +9,8 @@ import type {
   DocumentRequirement,
   MemberRole,
   ProjectSummary,
+  ProjectInviteRecord,
+  ProjectMemberRecord,
   ProjectWorkspace,
   RemarkRecord,
 } from "@/lib/types";
@@ -172,7 +174,14 @@ export async function getProjectWorkspace(projectId: string) {
     redirect("/dashboard");
   }
 
-  const [{ data: project }, { data: credits }, { data: documents }, { data: notifications }] =
+  const [
+    { data: project },
+    { data: credits },
+    { data: documents },
+    { data: notifications },
+    { data: invites },
+    { data: members },
+  ] =
     await Promise.all([
       client.from("projects").select("*").eq("id", projectId).single(),
       client.from("credits").select("*").eq("project_id", projectId).order("credit_code"),
@@ -187,6 +196,16 @@ export async function getProjectWorkspace(projectId: string) {
         .eq("user_id", user.id)
         .eq("project_id", projectId)
         .order("created_at", { ascending: false }),
+      client
+        .from("project_invites")
+        .select("id, project_id, email, role, token, created_by, accepted_by, accepted_at, created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+      client
+        .from("project_members")
+        .select("id, project_id, user_id, member_email, role, created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
     ]);
   const creditIds = (credits ?? []).map((credit) => credit.id);
   const { data: remarks } = creditIds.length
@@ -199,6 +218,8 @@ export async function getProjectWorkspace(projectId: string) {
     project,
     userRole: normalizeRole(membership.role),
     credits: mappedCredits,
+    members: (members ?? []) as ProjectMemberRecord[],
+    invites: (invites ?? []) as ProjectInviteRecord[],
     notifications: notifications ?? [],
   } satisfies ProjectWorkspace;
 }
@@ -219,7 +240,14 @@ export async function getProjectWorkspaceForApi(projectId: string) {
     return null;
   }
 
-  const [{ data: project }, { data: credits }, { data: documents }, { data: notifications }] =
+  const [
+    { data: project },
+    { data: credits },
+    { data: documents },
+    { data: notifications },
+    { data: invites },
+    { data: members },
+  ] =
     await Promise.all([
       client.from("projects").select("*").eq("id", projectId).single(),
       client.from("credits").select("*").eq("project_id", projectId).order("credit_code"),
@@ -234,6 +262,16 @@ export async function getProjectWorkspaceForApi(projectId: string) {
         .eq("user_id", user.id)
         .eq("project_id", projectId)
         .order("created_at", { ascending: false }),
+      client
+        .from("project_invites")
+        .select("id, project_id, email, role, token, created_by, accepted_by, accepted_at, created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+      client
+        .from("project_members")
+        .select("id, project_id, user_id, member_email, role, created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
     ]);
   const creditIds = (credits ?? []).map((credit) => credit.id);
   const { data: remarks } = creditIds.length
@@ -246,6 +284,8 @@ export async function getProjectWorkspaceForApi(projectId: string) {
     project,
     userRole: normalizeRole(membership.role),
     credits: mappedCredits,
+    members: (members ?? []) as ProjectMemberRecord[],
+    invites: (invites ?? []) as ProjectInviteRecord[],
     notifications: notifications ?? [],
   } satisfies ProjectWorkspace;
 }
@@ -299,6 +339,7 @@ export async function createProjectForCurrentUser({
       name,
       target_rating: targetRating,
       certification_type: "IGBC Green Interiors v2",
+      created_by: user.id,
     })
     .select("id")
     .single();
@@ -310,6 +351,7 @@ export async function createProjectForCurrentUser({
   const membershipError = await client.from("project_members").insert({
     project_id: project.id,
     user_id: user.id,
+    member_email: user.email ?? null,
     role: "owner",
   });
 

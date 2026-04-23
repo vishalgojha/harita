@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createProjectAction } from "@/app/actions";
 import { AiGuidePanel } from "@/components/assistant/ai-guide-panel";
+import { GuidedTour } from "@/components/guided-tour";
 import { SetupState } from "@/components/setup-state";
 import { Shell } from "@/components/shell";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +16,9 @@ import { pct } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const [user, projects] = await Promise.all([getCurrentUser(), getDashboardProjects()]);
+  if (projects.length === 0) {
+    redirect("/welcome");
+  }
   const hasProjects = projects.length > 0;
 
   const totals = {
@@ -57,6 +62,28 @@ export default async function DashboardPage() {
           "Connect Supabase when you want real sign-in, uploads, and persistence.",
         ],
   };
+  const tourSteps = [
+    {
+      selector: "#dashboard-focus",
+      title: "Start with the highest-risk project",
+      body: "This card shows the project most likely to need action first, so you do not have to scan the whole workspace blindly.",
+    },
+    {
+      selector: "#dashboard-create-project",
+      title: "Create a new workspace",
+      body: "Use this form when you need to spin up another project. The first signed-in user becomes the owner automatically.",
+    },
+    {
+      selector: "#dashboard-projects",
+      title: "Open the active workspaces",
+      body: "This list keeps every project visible with progress, docs, and open notes at a glance.",
+    },
+    {
+      selector: "#dashboard-ai-guide",
+      title: "Ask for the next step",
+      body: "The assistant can explain what to do first if the list feels crowded or you need a quick prioritization pass.",
+    },
+  ];
 
   return (
     <Shell
@@ -70,8 +97,9 @@ export default async function DashboardPage() {
       notificationCount={projects.reduce((sum, project) => sum + project.openRemarks, 0)}
     >
       {!env.isConfigured ? <SetupState /> : null}
+      <GuidedTour storageKey="harita:guided-tour:dashboard" steps={tourSteps} startOnMount label="Show tour" />
 
-      <section className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
+      <section id="dashboard-focus" className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="surface-card overflow-hidden p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-[720px]">
@@ -177,7 +205,7 @@ export default async function DashboardPage() {
         ))}
       </section>
 
-      <section className="surface-card mt-4 p-4">
+      <section id="dashboard-create-project" className="surface-card mt-4 p-4">
         <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr]">
           <div>
             <p className="dense-label">How to use this</p>
@@ -194,7 +222,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <div className="mt-4">
+      <div id="dashboard-ai-guide" className="mt-4">
         <AiGuidePanel
           context={dashboardContext}
           enabled={env.aiReady}
@@ -245,7 +273,7 @@ export default async function DashboardPage() {
         </form>
       </section>
 
-      <section className="mt-4">
+      <section id="dashboard-projects" className="mt-4">
         <div className="surface-card p-5">
           <div className="flex items-center justify-between gap-3">
             <div>

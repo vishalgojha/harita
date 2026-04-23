@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Leaf } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/login-form";
@@ -58,25 +59,27 @@ export default function LoginPage() {
             <h2 className="mt-2 text-[15px] font-medium text-[var(--color-text-primary)]">Sign in</h2>
             <p className="mt-1 text-[12px] text-[var(--color-text-secondary)]">
               {env.isConfigured
-                ? "Sign in to open your live project workspace."
+                ? "Get a magic link to open your live project workspace."
                 : "Connect Supabase to enable sign in and project data."
               }
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <LoginForm disabled={!env.isConfigured} />
+            <Suspense fallback={<div className="h-[120px] rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)]" />}>
+              <LoginForm disabled={!env.isConfigured} />
+            </Suspense>
             <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-[11px] text-[var(--color-text-secondary)]">
               Real uploads, approvals, and project records require a live Supabase connection.
             </div>
             <div className="grid grid-cols-3 gap-2 text-[10px] text-[var(--color-text-tertiary)]">
               <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
+                Magic link
+              </div>
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
+                First owner
+              </div>
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
                 Invite only
-              </div>
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
-                Live data
-              </div>
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
-                AI guided
               </div>
             </div>
           </CardContent>

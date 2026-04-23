@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Circle, Download, FileWarning, ShieldCheck } from "lucide-react";
-import { addRemarkAction, setCreditStateAction, setDocumentStatusAction } from "@/app/actions";
+import {
+  addRemarkAction,
+  createProjectInviteAction,
+  revokeProjectInviteAction,
+  setCreditStateAction,
+  setDocumentStatusAction,
+} from "@/app/actions";
 import { AiGuidePanel } from "@/components/assistant/ai-guide-panel";
+import { GuidedTour } from "@/components/guided-tour";
+import { InviteLinkButton } from "@/components/project/invite-link-button";
 import { UploadDocumentForm } from "@/components/project/upload-document-form";
 import { Shell } from "@/components/shell";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +96,33 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
         : "The mandatory checklist is complete, so move toward export and submission packaging.",
     ],
   };
+  const tourSteps = [
+    {
+      selector: "#project-summary",
+      title: "Start with the project summary",
+      body: "This top section shows the target rating, completion progress, and the key facts for the current workspace.",
+    },
+    {
+      selector: "#invite-teammates",
+      title: "Invite teammates from here",
+      body: "Owners create invite links in this panel. The invited user has to sign in with the same email before joining.",
+    },
+    {
+      selector: "#project-members",
+      title: "Check who is already here",
+      body: "This list shows the current workspace members, their roles, and when they joined.",
+    },
+    {
+      selector: "#project-checklist",
+      title: "Work through the checklist",
+      body: "The main table keeps every credit visible, with filters and completion progress on the left and details on the right.",
+    },
+    {
+      selector: "#project-ai-guide",
+      title: "Ask for the next move",
+      body: "The AI panel can explain the current blocker, missing files, or the next step in plain language.",
+    },
+  ];
 
   return (
     <Shell
@@ -95,8 +130,11 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
       description={`${workspace.project.certification_type} - Target ${workspace.project.target_rating} - Track uploads, notes, and progress in one view.`}
       role={workspace.userRole}
       notificationCount={workspace.notifications.filter((item) => !item.read_at).length}
+      inviteCount={workspace.invites.filter((invite) => !invite.accepted_at).length}
     >
-      <section className="surface-card overflow-hidden p-5">
+      <GuidedTour storageKey={`harita:guided-tour:project:${params.id}`} steps={tourSteps} label="Show tour" />
+
+      <section id="project-summary" className="surface-card overflow-hidden p-5">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_280px] lg:items-end">
           <div className="max-w-[900px]">
             <p className="dense-label">Project workspace</p>
@@ -152,7 +190,140 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
         </div>
       </section>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_300px]">
+      {workspace.userRole === "owner" ? (
+        <section id="invite-teammates" className="surface-card mt-4 p-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-[760px]">
+              <p className="dense-label">Invite teammates</p>
+              <h2 className="mt-2 text-[15px] font-medium text-[var(--color-text-primary)]">Create an invite link for this project.</h2>
+              <p className="mt-2 text-[12px] leading-6 text-[var(--color-text-secondary)]">
+                Send the link to the invited email address. They must sign in with that email, then open the invite page to join the workspace.
+              </p>
+            </div>
+          </div>
+
+          <form action={createProjectInviteAction} className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_160px_auto]">
+            <input type="hidden" name="project_id" value={params.id} />
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="teammate@company.com"
+              className="h-[34px] rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-[13px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-border-strong)]"
+            />
+            <select
+              name="role"
+              className="h-[34px] rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-[13px] text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-strong)]"
+              defaultValue="consultant"
+            >
+              <option value="consultant">Consultant</option>
+              <option value="admin">Admin</option>
+            </select>
+            <Button type="submit" className="h-[34px] rounded-md px-4">
+              Create invite link
+            </Button>
+          </form>
+
+          <div className="mt-4 space-y-2">
+            {workspace.invites.length === 0 ? (
+              <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)] p-4 text-[12px] text-[var(--color-text-tertiary)]">
+                <p>No pending invites yet.</p>
+                <Button asChild variant="secondary" className="h-8 rounded-full px-4 text-[11px]">
+                  <Link href="#invite-teammates">Create invite</Link>
+                </Button>
+              </div>
+            ) : (
+              workspace.invites.map((invite) => (
+                <div
+                  key={invite.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-4 text-[12px] text-[var(--color-text-secondary)] lg:flex-row lg:items-center lg:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-[var(--color-text-primary)]">{invite.email}</p>
+                    <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">Role: {invite.role}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <Badge
+                        className={
+                          invite.accepted_at
+                            ? "border border-[var(--color-green-light)] bg-[var(--color-green-light)] text-[var(--color-green)]"
+                            : "border border-[var(--color-amber-light)] bg-[var(--color-amber-light)] text-[var(--color-amber)]"
+                        }
+                      >
+                        {invite.accepted_at ? "Accepted" : "Pending"}
+                      </Badge>
+                      {invite.accepted_at ? (
+                        <span className="text-[11px] text-[var(--color-text-tertiary)]">
+                          Accepted {new Date(invite.accepted_at).toLocaleDateString()}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/invite/${invite.token}`}
+                      className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-[11px] font-medium text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)]"
+                    >
+                      Open invite
+                    </Link>
+                    <InviteLinkButton href={`/invite/${invite.token}`} />
+                    {!invite.accepted_at ? (
+                      <form action={revokeProjectInviteAction}>
+                        <input type="hidden" name="project_id" value={params.id} />
+                        <input type="hidden" name="token" value={invite.token} />
+                        <Button
+                          type="submit"
+                          variant="secondary"
+                          className="h-auto rounded-full px-3 py-1.5 text-[11px]"
+                        >
+                          Revoke
+                        </Button>
+                      </form>
+                    ) : null}
+                    <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 font-mono text-[10px] text-[var(--color-text-tertiary)]">
+                      /invite/{invite.token}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div id="project-members" className="mt-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="dense-label">Members</p>
+                <h3 className="mt-2 text-[13px] font-medium text-[var(--color-text-primary)]">People in this workspace</h3>
+              </div>
+              <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1.5 text-[11px] text-[var(--color-text-secondary)]">
+                {workspace.members.length} member{workspace.members.length === 1 ? "" : "s"}
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-2">
+              {workspace.members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-[12px] text-[var(--color-text-secondary)] sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-[var(--color-text-primary)]">
+                      {member.member_email ?? member.user_id}
+                    </p>
+                    <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
+                      Joined {new Date(member.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Badge className="border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[11px] text-[var(--color-text-secondary)]">
+                    {member.role}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <div id="project-checklist" className="mt-4 grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_300px]">
         <aside className="rounded-xl border-r border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-4">
           <div className="border-b border-[var(--color-border)] px-2 pb-3">
             <p className="truncate text-[13px] font-medium text-[var(--color-text-primary)]">
@@ -403,7 +574,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps) {
             </div>
           </div>
 
-          <div className="space-y-4 px-4 py-4">
+          <div id="project-ai-guide" className="space-y-4 px-4 py-4">
             <AiGuidePanel
               context={assistantContext}
               enabled={env.aiReady}

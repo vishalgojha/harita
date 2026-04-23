@@ -10,12 +10,14 @@ export function Shell({
   description,
   role,
   notificationCount,
+  inviteCount,
   children,
 }: {
   title: string;
   description: string;
   role?: MemberRole;
   notificationCount?: number;
+  inviteCount?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -48,6 +50,11 @@ export function Shell({
               <Bell className="h-3.5 w-3.5" />
               <span className="mono">{notificationCount ?? 0} open notes</span>
             </Link>
+            {typeof inviteCount === "number" ? (
+              <span className="hidden rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-[11px] text-[var(--color-text-secondary)] sm:inline-flex">
+                {inviteCount} pending invite{inviteCount === 1 ? "" : "s"}
+              </span>
+            ) : null}
             <ThemeToggle />
             <span className="h-4 w-px bg-[var(--color-border)]" aria-hidden="true" />
             <form action="/auth/signout" method="post">
@@ -80,6 +87,11 @@ export function Shell({
               {typeof notificationCount === "number" ? (
                 <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1.5 font-medium text-[var(--color-text-secondary)]">
                   {notificationCount} open note{notificationCount === 1 ? "" : "s"}
+                </span>
+              ) : null}
+              {typeof inviteCount === "number" ? (
+                <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-1.5 font-medium text-[var(--color-text-secondary)]">
+                  {inviteCount} pending invite{inviteCount === 1 ? "" : "s"}
                 </span>
               ) : null}
             </div>

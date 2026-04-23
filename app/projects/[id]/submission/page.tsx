@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getSubmissionWorkspace } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export default async function SubmissionPage({ params }: { params: { id: string } }) {
   const workspace = await getSubmissionWorkspace(params.id);
   const mandatoryReady = workspace.credits

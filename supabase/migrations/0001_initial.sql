@@ -5,6 +5,7 @@ create table if not exists public.projects (
   name text not null,
   certification_type text not null default 'IGBC Green Interiors v2',
   target_rating text not null check (target_rating in ('Certified', 'Silver', 'Gold', 'Platinum')),
+  created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default timezone('utc', now())
 );
 
@@ -51,9 +52,22 @@ create table if not exists public.project_members (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
+  member_email text,
   role text not null check (role in ('owner', 'consultant', 'admin')),
   created_at timestamptz not null default timezone('utc', now()),
   unique(project_id, user_id)
+);
+
+create table if not exists public.project_invites (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  email text not null,
+  role text not null check (role in ('consultant', 'admin')),
+  token text not null unique,
+  created_by uuid references auth.users(id) on delete set null,
+  accepted_by uuid references auth.users(id) on delete set null,
+  accepted_at timestamptz,
+  created_at timestamptz not null default timezone('utc', now())
 );
 
 create table if not exists public.notifications (
@@ -91,6 +105,35 @@ as $$
     where project_id = project
       and user_id = auth.uid()
       and role = any(allowed_roles)
+  );
+$$;
+
+create or replace function public.is_project_owner(project uuid)
+returns boolean
+language sql
+stable
+as $$
+  select exists (
+    select 1
+    from public.project_members
+    where project_id = project
+      and user_id = auth.uid()
+      and role = 'owner'
+  );
+$$;
+
+create or replace function public.has_project_invite(project uuid, invited_role text)
+returns boolean
+language sql
+stable
+as $$
+  select exists (
+    select 1
+    from public.project_invites
+    where project_id = project
+      and lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and accepted_at is null
+      and role = invited_role
   );
 $$;
 
@@ -196,6 +239,7 @@ alter table public.credits enable row level security;
 alter table public.documents enable row level security;
 alter table public.remarks enable row level security;
 alter table public.project_members enable row level security;
+alter table public.project_invites enable row level security;
 alter table public.notifications enable row level security;
 
 create policy "projects_select_members"
@@ -206,7 +250,7 @@ using (public.is_project_member(id));
 create policy "projects_insert_authenticated"
 on public.projects for insert
 to authenticated
-with check (true);
+with check (created_by = auth.uid());
 
 create policy "credits_select_members"
 on public.credits for select
@@ -272,8 +316,44 @@ on public.project_members for insert
 to authenticated
 with check (
   user_id = auth.uid()
-  or public.has_project_role(project_id, array['admin', 'consultant'])
+  and (
+    (role = 'owner' and exists (select 1 from public.projects where id = project_id and created_by = auth.uid()))
+    or public.has_project_invite(project_id, role)
+  )
 );
+
+create policy "invites_select_owner_or_self"
+on public.project_invites for select
+to authenticated
+using (
+  public.is_project_owner(project_id)
+  or (
+    accepted_at is null
+    and lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  )
+);
+
+create policy "invites_insert_owner"
+on public.project_invites for insert
+to authenticated
+with check (public.is_project_owner(project_id));
+
+create policy "invites_update_owner_or_self"
+on public.project_invites for update
+to authenticated
+using (
+  public.is_project_owner(project_id)
+  or lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+)
+with check (
+  public.is_project_owner(project_id)
+  or lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+);
+
+create policy "invites_delete_owner"
+on public.project_invites for delete
+to authenticated
+using (public.is_project_owner(project_id));
 
 create policy "notifications_select_self"
 on public.notifications for select

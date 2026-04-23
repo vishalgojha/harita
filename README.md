@@ -130,11 +130,13 @@ If the Supabase credentials are missing, the login page shows setup guidance ins
 ## Product surfaces
 
 - `/login`
-  Email/password sign-in for the live workspace, with setup guidance when the live database is not connected.
+  Magic-link sign-in for the live workspace, with setup guidance when the live database is not connected.
+- `/invite/[token]`
+  Accept a project invite after signing in with the invited email address.
 - `/dashboard`
   Dense consultant dashboard with KPI strip, inline project creation, and compact project rows.
 - `/projects/[id]`
-  Three-column workspace with category navigation, dense credit table, status/doc requirement chips, upload/review actions, and remarks.
+  Three-column workspace with category navigation, dense credit table, status/doc requirement chips, invite management, upload/review actions, and remarks.
 - `/projects/[id]/submission`
   Completed-credit submission view with approved document list and ZIP export gating based on mandatory credits.
 
