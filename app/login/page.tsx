@@ -59,7 +59,7 @@ export default function LoginPage() {
             <h2 className="mt-2 text-[15px] font-medium text-[var(--color-text-primary)]">Sign in</h2>
             <p className="mt-1 text-[12px] text-[var(--color-text-secondary)]">
               {env.isConfigured
-                ? "Get a magic link to open your live project workspace."
+                ? "Sign in with your email and password to open the live workspace."
                 : "Connect Supabase to enable sign in and project data."
               }
             </p>
@@ -73,13 +73,13 @@ export default function LoginPage() {
             </div>
             <div className="grid grid-cols-3 gap-2 text-[10px] text-[var(--color-text-tertiary)]">
               <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
-                Magic link
+                Email login
               </div>
               <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
-                First owner
+                Password auth
               </div>
               <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-center">
-                Invite only
+                Team invites
               </div>
             </div>
           </CardContent>

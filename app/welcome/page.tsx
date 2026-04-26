@@ -52,7 +52,7 @@ export default async function WelcomePage() {
 
         <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-tertiary)]">
           <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2.5 py-1">
-            Magic-link sign in
+            Email and password sign-in
           </span>
           <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2.5 py-1">
             First user becomes owner
