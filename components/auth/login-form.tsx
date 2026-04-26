@@ -41,6 +41,7 @@ export function LoginForm({ disabled = false }: { disabled?: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const nextPath = safeNextPath(searchParams.get("next"));
@@ -103,6 +104,38 @@ export function LoginForm({ disabled = false }: { disabled?: boolean }) {
 
     setMessage("Account created. Check your email to confirm it, then sign in.");
     setMode("signin");
+  }
+
+  async function onResetPassword() {
+    if (disabled) {
+      setError("Connect Supabase to enable password recovery.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Enter your email first so we know where to send the reset link.");
+      return;
+    }
+
+    setResettingPassword(true);
+    setError("");
+    setMessage("");
+    const supabase = createClient();
+    const redirectTo = new URL("/auth/callback", window.location.origin);
+    redirectTo.searchParams.set("next", "/reset-password");
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: redirectTo.toString(),
+    });
+
+    setResettingPassword(false);
+
+    if (resetError) {
+      setError(resetError.message || "Could not send the password reset email.");
+      return;
+    }
+
+    setMessage("Password reset email sent. Open the link in your email to choose a new password.");
   }
 
   return (
@@ -175,14 +208,26 @@ export function LoginForm({ disabled = false }: { disabled?: boolean }) {
 
       <p className="text-[11px] leading-5 text-[var(--color-text-tertiary)]">
         {mode === "signin"
-          ? "Use the email and password for your Harita workspace account."
+          ? "Use the email and password for your Harita workspace account. If this account was created with the old magic-link flow, reset the password once and then sign in normally."
           : "Create the first account to claim the workspace, then invite the rest of the team."}
       </p>
 
       {error ? <p className="text-[11px] text-[var(--color-red)]">{error}</p> : null}
       {message ? <p className="text-[11px] text-[var(--color-green)]">{message}</p> : null}
 
-      <Button type="submit" className="h-8 w-full rounded-md" disabled={loading || disabled}>
+      {mode === "signin" ? (
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-auto justify-start rounded-none py-0 text-[11px]"
+          disabled={resettingPassword || loading || disabled}
+          onClick={() => void onResetPassword()}
+        >
+          {resettingPassword ? "Sending reset link..." : "Forgot password?"}
+        </Button>
+      ) : null}
+
+      <Button type="submit" className="h-8 w-full rounded-md" disabled={loading || resettingPassword || disabled}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         {disabled ? "Connect Supabase first" : mode === "signin" ? "Sign in" : "Create account"}
       </Button>
